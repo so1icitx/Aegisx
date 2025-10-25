@@ -7,6 +7,15 @@ pass_hash = PasswordHasher(hash_len = 128, salt_len = 16)
 
 
 
+
+
+
+def get_db_connection():
+    conn = sqlite3.connect('passwords.db', check_same_thread=False)
+    return conn
+
+
+
 # if script is run for the 1st time it creates a database + generates a key for hashing
 if not os.path.exists('passwords.db'):
     with get_db_connection() as conn:
@@ -20,9 +29,6 @@ if not os.path.exists('passwords.db'):
         os.chmod('secret.key', stat.S_IRUSR | stat.S_IWUSR)
 
 
-def get_db_connection():
-    conn = sqlite3.connect('passwords.db', check_same_thread=False)
-    return conn
 
 # loads the fernet keys for encrypt/decrypting
 def load_key():
