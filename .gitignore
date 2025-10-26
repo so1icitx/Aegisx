@@ -1,0 +1,49 @@
+# AegisX Security Files - DO NOT COMMIT
+master_key.txt
+secret.key
+passwords.db
+*.db
+
+# Environment
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# SSL Certificates
+*.pem
+*.crt
+*.key
+cert.pem
+key.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.sh
