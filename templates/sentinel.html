@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisX - Sentinel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Using dashboard CSS for consistent styling -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            /* Updated to dark premium gradient background */
+            background: linear-gradient(135deg, #0a0e27 0%, #0d1117 50%, #0a0e27 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Updated subtle animated gradient overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+            animation: rotate 30s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Enhanced sidebar with darker premium glassmorphism */
+        .sidebar {
+            background: rgba(10, 14, 28, 0.98);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-right: 1px solid rgba(59, 130, 246, 0.1);
+            box-shadow: 4px 0 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .sidebar-item {
+            border-radius: 12px;
+            margin: 4px 12px;
+            padding: 12px 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            font-size: 13px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.15), transparent);
+            transition: left 0.5s;
+        }
+
+        .sidebar-item:hover::before {
+            left: 100%;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(59, 130, 246, 0.12);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.25) 100%);
+            color: #ffffff;
+            border-left: 3px solid #3b82f6;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Made top bar match sidebar darkness */
+        .top-search-bar {
+            background: rgba(10, 14, 28, 0.98);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Updated entry row styling for premium feel */
+        .entry-row {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.08);
+            /* Make entries button-like: prevent text selection and show pointer cursor */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .entry-row::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), transparent);
+            transition: opacity 0.3s;
+        }
+
+        .entry-row:hover {
+            background-color: rgba(30, 41, 59, 0.8);
+            border-color: rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+        }
+
+        .entry-row.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border-left: 3px solid rgb(59, 130, 246);
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+        }
+
+        .entry-row:hover::before {
+            opacity: 1;
+        }
+
+        /* Updated panels to match new color scheme */
+        .detail-panel {
+            background: rgba(10, 14, 28, 0.98);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-left: 1px solid rgba(59, 130, 246, 0.1);
+            box-shadow: -4px 0 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .add-panel, .edit-panel, .password-gen-panel {
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-left: 1px solid rgba(59, 130, 246, 0.1);
+            box-shadow: -4px 0 32px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Updated input fields for modern look */
+        .search-input, .add-input {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #ffffff;
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 400;
+            font-size: 13px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .search-input:focus, .add-input:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.6);
+            background: rgba(30, 41, 59, 0.9);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), inset 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .search-input::placeholder, .add-input::placeholder {
+            color: rgba(148, 163, 184, 0.5);
+            font-size: 13px;
+        }
+
+        /* Redesigned button with blue gradient */
+        .add-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .add-button:hover::before {
+            left: 100%;
+        }
+
+        .add-button:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.5);
+        }
+
+        .add-button:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            font-weight: 500;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(51, 65, 85, 0.8);
+            border-color: rgba(148, 163, 184, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(148, 163, 184, 0.2);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .info-card {
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.08);
+            border-radius: 12px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .password-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 8px;
+            background: rgba(51, 65, 85, 0.5);
+            outline: none;
+            position: relative;
+        }
+
+        .password-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+        }
+
+        .password-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+
+        .password-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+        }
+
+        .password-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+
+        .generated-password {
+            background: transparent;
+            border: none;
+            padding: 1.5rem 0;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 18px;
+            letter-spacing: 2px;
+            word-break: break-all;
+            color: #60a5fa;
+            font-weight: 600;
+            box-shadow: none;
+            text-align: center;
+        }
+
+        .checkbox-custom {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(148, 163, 184, 0.3);
+            border-radius: 8px;
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .checkbox-custom:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .checkbox-custom:checked {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .checkbox-custom:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-text {
+            flex-grow: 1;
+        }
+
+        .password-hidden {
+            font-family: monospace;
+            letter-spacing: 4px;
+            font-size: 16px;
+        }
+
+        /* Eye icon styles */
+        .eye-icon {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Changed Prussian blue glow to cerulean */
+        .eye-icon:hover {
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+        }
+
+        /* Enhanced copy feedback */
+        /* Changed Prussian blue gradient to cerulean */
+        .copy-feedback {
+            position: absolute;
+            right: 40px;
+            top: -30px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5);
+        }
+
+        .copy-feedback.show {
+            opacity: 1;
+        }
+
+        .favicon-img {
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Added fallback styling for default favicon */
+        .favicon-img.fallback {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 8px;
+        }
+
+        .error-text {
+            color: #f87171;
+            font-size: 11px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        /* Enhanced close button */
+        .close-button {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: rgba(148, 163, 184, 0.8);
+            cursor: pointer;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+            z-index: 30;
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-button:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.3);
+            transform: rotate(90deg);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Enhanced scrollbar */
+        /* Changed Prussian blue scrollbar to cerulean */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(17, 24, 39, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.5) 100%);
+        }
+
+        /* Added bulk operations styles */
+        .bulk-actions-bar {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 14, 28, 0.98);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .bulk-actions-bar.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Enhanced checkbox styling for better visibility */
+        .checkbox-entry {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(148, 163, 184, 0.3);
+            border-radius: 6px;
+            background: rgba(30, 41, 59, 0.5);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .checkbox-entry:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .checkbox-entry:checked {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-color: #3b82f6;
+        }
+
+        .checkbox-entry:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* Add highlight when entry is selected in bulk mode */
+        .entry-row.selected-bulk {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        /* Selection mode specific styles */
+        .selection-mode .entry-row {
+            cursor: pointer;
+        }
+
+        .selection-mode .checkbox-entry {
+            display: block !important;
+        }
+
+        /* Added light theme styles */
+        body.light-theme {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+            color: #0f172a;
+        }
+
+        body.light-theme::before {
+            background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+        }
+
+        body.light-theme .sidebar {
+            background: rgba(255, 255, 255, 0.98);
+            border-right: 1px solid rgba(59, 130, 246, 0.1);
+        }
+
+        body.light-theme .sidebar-item {
+            color: #475569;
+        }
+
+        body.light-theme .sidebar-item:hover {
+            background: rgba(59, 130, 246, 0.08);
+            color: #0f172a;
+        }
+
+        body.light-theme .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.12) 100%);
+            color: #3b82f6;
+            border-left: 3px solid #3b82f6;
+        }
+
+        body.light-theme .top-search-bar {
+            background: rgba(255, 255, 255, 0.98);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+        }
+
+        /* Added light theme styles for all missing elements */
+        body.light-theme .entry-row {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #0f172a;
+        }
+
+        body.light-theme .entry-row:hover {
+            background: rgba(248, 250, 252, 1);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        body.light-theme .entry-row.selected {
+            background: rgba(219, 234, 254, 0.95);
+            border-color: rgba(59, 130, 246, 0.6);
+        }
+
+        body.light-theme .entry-row p,
+        body.light-theme .entry-row h3 {
+            color: #0f172a !important;
+        }
+
+        body.light-theme .entry-row .text-gray-400 {
+            color: #64748b !important;
+        }
+
+        /* Light theme for filter dropdown */
+        body.light-theme #filter-dropdown {
+            background: rgba(255, 255, 255, 0.98) !important;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        body.light-theme .filter-option {
+            color: #0f172a !important;
+        }
+
+        body.light-theme .filter-option:hover {
+            background: rgba(59, 130, 246, 0.08) !important;
+        }
+
+        body.light-theme #filter-label {
+            color: #0f172a !important;
+        }
+
+        /* Light theme for bulk actions bar */
+        body.light-theme .bulk-actions-bar {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        body.light-theme .bulk-actions-bar #selected-count {
+            color: #0f172a !important;
+        }
+
+        body.light-theme .bulk-actions-bar .bg-gray-600 {
+            background: rgba(148, 163, 184, 0.2) !important;
+        }
+
+        /* Added password list background class for theme control */
+        /* Added password-list-bg class for theme control in Sentinel */
+        .password-list-bg {
+            background: rgba(10, 14, 28, 0.98);
+        }
+
+        body.light-theme .password-list-bg {
+            background: rgba(255, 255, 255, 0.98) !important;
+            border-right: 1px solid rgba(59, 130, 246, 0.1) !important;
+        }
+        /* </CHANGE> */
+
+        body.light-theme .detail-panel,
+        body.light-theme .add-panel,
+        body.light-theme .edit-panel,
+        body.light-theme .password-gen-panel {
+            background: rgba(255, 255, 255, 0.98);
+            border-left: 1px solid rgba(59, 130, 246, 0.1);
+        }
+
+        body.light-theme .search-input,
+        body.light-theme .add-input {
+            background: rgba(248, 250, 252, 0.9);
+            color: #0f172a;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        body.light-theme .search-input:focus,
+        body.light-theme .add-input:focus {
+            border-color: rgba(59, 130, 246, 0.6);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        body.light-theme .info-card {
+            background: rgba(248, 250, 252, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        body.light-theme .info-card p {
+            color: #0f172a;
+        }
+
+        body.light-theme .text-white {
+            color: #0f172a !important;
+        }
+
+        body.light-theme .text-gray-400 {
+            color: #64748b !important;
+        }
+
+        body.light-theme .text-gray-300 {
+            color: #94a3b8 !important;
+        }
+
+        body.light-theme .text-gray-600 {
+            color: #475569 !important;
+        }
+
+        body.light-theme .close-button {
+            background: rgba(248, 250, 252, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #64748b;
+        }
+
+        body.light-theme .close-button:hover {
+            background: rgba(254, 226, 226, 0.9);
+            color: #ef4444;
+        }
+
+        /* Styles for modals */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: rgba(17, 24, 39, 0.98);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 28rem;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-icon.warning {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .modal-icon.info {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-button {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-button.cancel {
+            background: rgba(51, 65, 85, 0.6);
+            color: white;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .modal-button.cancel:hover {
+            background: rgba(71, 85, 105, 0.8);
+        }
+
+        .modal-button.confirm {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        .modal-button.confirm:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Added focus ring styling to add-input class */
+        .add-input:focus {
+            @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+        }
+
+        /* Added hover effect with cerulean blue outline for field boxes */
+        /* Added hover effect with dark blue highlight for field boxes in details panel */
+        .field-box {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.08);
+            border-radius: 12px;
+            padding: 14px 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .field-box:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: #3b82f6;
+            outline: 2px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
+        }
+
+        .field-label {
+            color: #60a5fa;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        /* Added new Sentinel-specific styles */
+        .sentinel-container {
+            padding: 3rem 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .sentinel-header {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .sentinel-title {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+            letter-spacing: -1px;
+        }
+
+        .sentinel-subtitle {
+            font-size: 1.125rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .score-container {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 24px;
+            padding: 3rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .score-circle {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-svg {
+            transform: rotate(-90deg);
+        }
+
+        .score-bg {
+            fill: none;
+            stroke: rgba(51, 65, 85, 0.3);
+            stroke-width: 12;
+        }
+
+        .score-progress {
+            fill: none;
+            stroke: url(#scoreGradient);
+            stroke-width: 12;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .score-value {
+            position: absolute;
+            font-size: 4rem;
+            font-weight: 800;
+            color: #3b82f6;
+        }
+
+        .score-status {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+            text-align: center;
+        }
+
+        .checking-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        .spinner-small {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 16px 48px rgba(59, 130, 246, 0.2);
+        }
+
+        .result-card:hover::before {
+            opacity: 1;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .result-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .result-icon.success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .result-icon.warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .result-icon.danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .result-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 0.75rem;
+        }
+
+        .result-count {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: #3b82f6;
+        }
+
+        .result-count.success {
+            color: #10b981;
+        }
+
+        .result-count.warning {
+            color: #f59e0b;
+        }
+
+        .result-count.danger {
+            color: #ef4444;
+        }
+
+        .result-action {
+            margin-top: 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .result-card:hover .result-action {
+            opacity: 1;
+        }
+
+        .section-card {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .item-row {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+
+        .item-row:hover {
+            background: rgba(51, 65, 85, 0.6);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateX(4px);
+        }
+
+        .item-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-info p {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .status-badge.warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .status-badge.danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .empty-state svg {
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .result-card.status-success {
+            border-left: 4px solid #10b981;
+        }
+
+        .result-card.status-warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .result-card.status-danger {
+            border-left: 4px solid #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <!-- Using shared dashboard sidebar structure -->
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+    <!-- Sidebar (same as dashboard) -->
+    <!-- Left sidebar stays the same -->
+    <div class="fixed left-0 top-0 h-full w-80 sidebar flex flex-col z-20">
+        <!-- Added logo image next to so1vault text -->
+        <div class="p-8 flex items-center gap-3">
+            <img src="/static/images/so1vault.png" alt="so1vault logo" class="w-16 h-16 mx-auto mb-3 rounded-xl object-contain">
+            <div>
+                <h1 class="text-2xl font-bold logo-text">AegisX</h1>
+                <p class="text-gray-500 text-xs mt-1 font-medium">Secure Password Manager</p>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto py-2">
+            <!-- Added category filter section -->
+            <div class="px-4 mb-4">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2" data-translate="category">Categories</p>
+                <a href="{{ url_for('dashboard') }}?category=All" class="sidebar-item flex items-center {% if selected_category == 'All' %}active{% else %}text-gray-400{% endif %}">
+                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <span data-translate="allItems">All Items</span>
+                </a>
+                {% for cat in categories %}
+                <a href="{{ url_for('dashboard') }}?category={{ cat }}" class="sidebar-item flex items-center {% if selected_category == cat %}active{% else %}text-gray-400{% endif %}">
+                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <span>{{ cat }}</span>
+                </a>
+                {% endfor %}
+            </div>
+
+            <div class="border-t border-white border-opacity-5 my-2"></div>
+
+            <!-- Update sidebar to highlight active tab -->
+            <a href="{{ url_for('dashboard') }}" class="sidebar-item flex items-center {% if current_tab == 'passwords' or not current_tab %}active{% else %}text-gray-400{% endif %}">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                <span data-translate="passwords">Passwords</span>
+            </a>
+            <!-- Update Passkeys tab with active state -->
+            <a href="{{ url_for('dashboard') }}?tab=passkeys" class="sidebar-item flex items-center {% if current_tab == 'passkeys' %}active{% else %}text-gray-400{% endif %}">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+                <span>Passkeys</span>
+            </a>
+            <a href="#" class="sidebar-item flex items-center text-gray-400">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                <span>{{ t('cards') }}</span>
+            </a>
+            <!-- Added Trash link after Notes -->
+            <a href="{{ url_for('trash') }}" class="sidebar-item flex items-center text-gray-400">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <span>{{ t('trash') }}</span>
+            </a>
+            <!-- </CHANGE> -->
+        </div>
+        <div class="p-4 border-t border-white border-opacity-5">
+            <!-- Added Sentinel button before Settings -->
+            <a href="{{ url_for('sentinel') }}" class="sidebar-item flex items-center text-gray-400 mb-2 active">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                <span>Sentinel</span>
+            </a>
+            <!-- </CHANGE> -->
+            <!-- Added settings button next to logout -->
+            <a href="{{ url_for('settings') }}" class="sidebar-item flex items-center text-gray-400 mb-2">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37.996.608 2.296.07 2.572-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span>{{ t('settings') }}</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="sidebar-item flex items-center text-gray-400">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>{{ t('logout') }}</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main content area with proper margin for sidebar -->
+    <div class="ml-80 min-h-screen" style="background: transparent;">
+        <div class="sentinel-container">
+            <!-- Header -->
+            <div class="sentinel-header">
+                <h1 class="sentinel-title">Aegis Sentinel</h1>
+                <p class="sentinel-subtitle">Comprehensive security analysis and monitoring for your vault</p>
+            </div>
+
+            <!-- Dynamic Security Score -->
+            <div class="score-container">
+                <div class="score-circle">
+                    <svg class="score-svg" width="200" height="200">
+                        <defs>
+                            <!-- Enhanced gradient with multiple color stops for cutting-edge look -->
+                            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+                                <stop offset="25%" style="stop-color:#f59e0b;stop-opacity:1" />
+                                <stop offset="50%" style="stop-color:#fbbf24;stop-opacity:1" />
+                                <stop offset="75%" style="stop-color:#10b981;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle class="score-bg" cx="100" cy="100" r="85"></circle>
+                        <circle id="scoreCircle" class="score-progress" cx="100" cy="100" r="85"
+                                stroke-dasharray="534.07" stroke-dashoffset="534.07"></circle>
+                    </svg>
+                    <div class="score-value" id="scoreValue">0</div>
+                </div>
+                <div class="score-status" id="scoreStatus">Initializing security analysis...</div>
+                <div id="checkingStatus" class="checking-status" style="display: none;">
+                    <div class="spinner-small"></div>
+                    <span id="checkingText">Analyzing...</span>
+                </div>
+            </div>
+
+            <!-- Security Check Results -->
+            <div id="resultsSection" class="results-grid" style="display: none;">
+                <!-- Password Reuse Result -->
+                <a href="{{ url_for('dashboard') }}?filter=duplicates" id="reuseCard" class="result-card">
+                    <div class="result-header">
+                        <div class="result-icon">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="result-title">Password Reuse</h3>
+                    <div class="result-count" id="reuseCount">0</div>
+                    <p style="font-size: 0.813rem; color: #6b7280;">passwords reused across accounts</p>
+                    <div class="result-action">
+                        View duplicates
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <!-- Breach Detection Result -->
+                <a href="{{ url_for('dashboard') }}?filter=breached" id="breachCard" class="result-card">
+                    <div class="result-header">
+                        <div class="result-icon">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="result-title">Breach Detection</h3>
+                    <div class="result-count" id="breachCount">0</div>
+                    <p style="font-size: 0.813rem; color: #6b7280;">passwords found in breaches</p>
+                    <div class="result-action">
+                        View breached passwords
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <!-- Password Strength Result -->
+                <a href="{{ url_for('dashboard') }}?filter=weak" id="strengthCard" class="result-card">
+                    <div class="result-header">
+                        <div class="result-icon">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="result-title">Password Strength</h3>
+                    <div class="result-count" id="strengthCount">0</div>
+                    <p style="font-size: 0.813rem; color: #6b7280;">weak passwords detected</p>
+                    <div class="result-action">
+                        View weak passwords
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Dark Web Monitoring Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.582m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Dark Web Monitoring
+                    </div>
+                    <button onclick="scanDarkWeb()" class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Scan Now
+                    </button>
+                </div>
+                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Checks your email addresses against Have I Been Pwned (HIBP) database</p>
+                <div id="darkWebResults"></div>
+            </div>
+
+            <!-- Passkey Opportunities Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                        </svg>
+                        Passkey Opportunities
+                    </div>
+                    <button onclick="checkPasskeyOpportunities()" class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Check for Passkeys
+                    </button>
+                </div>
+                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Identifies websites that support passkey authentication</p>
+                <div id="passkeyResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const csrfToken = document.querySelector('input[name="_csrf_token"]').value;
+        let currentScore = 0;
+        let targetScore = 0;
+        let securityData = null;
+
+        function animateScore(target, breachedCount = 0, breachDetails = []) {
+            targetScore = Math.min(Math.max(target, 0), 1000);
+            const circle = document.getElementById('scoreCircle');
+            const value = document.getElementById('scoreValue');
+            const statusText = document.getElementById('scoreStatus');
+            const circumference = 534.07;
+
+            const gradient = document.querySelector('#scoreGradient');
+
+            let scoreColor, statusMessage, gradientStops;
+
+            if (targetScore <= 300) {
+                // 0-300 = More green (better security closer to 0)
+                const greenIntensity = 1 - (targetScore / 300);
+                scoreColor = `rgb(${Math.floor(16 + (239 - 16) * (1 - greenIntensity))}, ${Math.floor(185 - 100 * (1 - greenIntensity))}, ${Math.floor(129 - 60 * (1 - greenIntensity))})`;
+                
+                if (targetScore <= 100) {
+                    statusMessage = 'Exceptional Security — Fortress-Grade Protection';
+                    gradientStops = `
+                        <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+                    `;
+                } else {
+                    statusMessage = 'Strong Security — Well Protected';
+                    gradientStops = `
+                        <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#10b981;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                    `;
+                }
+            } else if (targetScore <= 500) {
+                // 300-500 = Yellowish/orange
+                scoreColor = '#f59e0b';
+                statusMessage = breachedCount > 0 
+                    ? `Moderate Risk — ${breachedCount} Breached Credential${breachedCount > 1 ? 's' : ''} Found`
+                    : 'Moderate Security — Improvements Needed';
+                gradientStops = `
+                    <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#fb923c;stop-opacity:1" />
+                `;
+            } else {
+                // 700+ = Reddish (more red the higher the score)
+                const redIntensity = Math.min((targetScore - 500) / 500, 1);
+                scoreColor = `rgb(${Math.floor(239 - 20 * (1 - redIntensity))}, ${Math.floor(68 - 20 * redIntensity)}, ${Math.floor(68 - 20 * redIntensity)})`;
+                
+                if (breachedCount > 0) {
+                    statusMessage = `Critical Alert — ${breachedCount} Breached Account${breachedCount > 1 ? 's' : ''} Detected`;
+                } else {
+                    statusMessage = 'Vulnerable — Urgent Security Upgrade Needed';
+                }
+                gradientStops = `
+                    <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#dc2626;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#b91c1c;stop-opacity:1" />
+                `;
+            }
+            /* </CHANGE> */
+
+            gradient.innerHTML = gradientStops;
+            value.style.color = scoreColor;
+            statusText.style.color = scoreColor;
+            statusText.textContent = statusMessage;
+
+            const animate = () => {
+                if (currentScore < targetScore) {
+                    currentScore += 8;
+                    if (currentScore > targetScore) currentScore = targetScore;
+
+                    value.textContent = currentScore;
+                    const offset = circumference - (currentScore / 1000) * circumference;
+                    circle.style.strokeDashoffset = offset;
+
+                    requestAnimationFrame(animate);
+                }
+            };
+
+            animate();
+        }
+
+        function calculateSecurityScore(data) {
+            const weakCount = data.weak_passwords ? data.weak_passwords.length : 0;
+            const breachedCount = data.breached_passwords ? data.breached_passwords.length : 0;
+            const reusedCount = data.duplicate_passwords ? data.duplicate_passwords.length : 0;
+
+            const weakPenalty = weakCount * 50;
+            const breachedPenalty = breachedCount * 100;
+            const reusedPenalty = reusedCount * 75;
+
+            const totalPenalty = weakPenalty + breachedPenalty + reusedPenalty;
+            const score = Math.max(0, Math.min(1000, 1000 - totalPenalty));
+
+            return Math.round(score);
+        }
+
+        function updateResults(data) {
+            securityData = data;
+            document.getElementById('resultsSection').style.display = 'grid';
+
+            const reuseCount = data.duplicate_passwords ? data.duplicate_passwords.length : 0;
+            const reuseCard = document.getElementById('reuseCard');
+            const reuseIcon = reuseCard.querySelector('.result-icon');
+            const reuseCountEl = document.getElementById('reuseCount');
+
+            reuseCountEl.textContent = reuseCount;
+            reuseCountEl.className = 'result-count ' + (reuseCount === 0 ? 'success' : reuseCount < 3 ? 'warning' : 'danger');
+            reuseIcon.className = 'result-icon ' + (reuseCount === 0 ? 'success' : reuseCount < 3 ? 'warning' : 'danger');
+            reuseCard.className = 'result-card ' + (reuseCount === 0 ? 'status-success' : reuseCount < 3 ? 'status-warning' : 'status-danger');
+
+            const breachCount = data.breached_passwords ? data.breached_passwords.length : 0;
+            const breachCard = document.getElementById('breachCard');
+            const breachIcon = breachCard.querySelector('.result-icon');
+            const breachCountEl = document.getElementById('breachCount');
+
+            breachCountEl.textContent = breachCount;
+            breachCountEl.className = 'result-count ' + (breachCount === 0 ? 'success' : breachCount < 2 ? 'warning' : 'danger');
+            breachIcon.className = 'result-icon ' + (breachCount === 0 ? 'success' : breachCount < 2 ? 'warning' : 'danger');
+            breachCard.className = 'result-card ' + (breachCount === 0 ? 'status-success' : breachCount < 2 ? 'status-warning' : 'status-danger');
+
+            const weakCount = data.weak_passwords ? data.weak_passwords.length : 0;
+            const strengthCard = document.getElementById('strengthCard');
+            const strengthIcon = strengthCard.querySelector('.result-icon');
+            const strengthCountEl = document.getElementById('strengthCount');
+
+            strengthCountEl.textContent = weakCount;
+            strengthCountEl.className = 'result-count ' + (weakCount === 0 ? 'success' : weakCount < 5 ? 'warning' : 'danger');
+            strengthIcon.className = 'result-icon ' + (weakCount === 0 ? 'success' : weakCount < 5 ? 'warning' : 'danger');
+            strengthCard.className = 'result-card ' + (weakCount === 0 ? 'status-success' : weakCount < 5 ? 'status-warning' : 'status-danger');
+        }
+
+        async function runSecurityAnalysis() {
+            const checkingStatus = document.getElementById('checkingStatus');
+            const checkingText = document.getElementById('checkingText');
+
+            checkingStatus.style.display = 'flex';
+
+            try {
+                checkingText.textContent = 'Checking password reuse...';
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                checkingText.textContent = 'Scanning for breaches...';
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                checkingText.textContent = 'Analyzing password strength...';
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                const response = await fetch('/api/security-dashboard');
+                const data = await response.json();
+
+                checkingStatus.style.display = 'none';
+
+                const score = calculateSecurityScore(data);
+                const breachedCount = data.breached_passwords ? data.breached_passwords.length : 0;
+                animateScore(score, breachedCount);
+
+                updateResults(data);
+
+            } catch (error) {
+                console.error('[v0] Security analysis error:', error);
+                checkingStatus.style.display = 'none';
+            }
+        }
+
+        async function scanDarkWeb() {
+            const resultsDiv = document.getElementById('darkWebResults');
+            resultsDiv.innerHTML = '<div class="empty-state"><div class="spinner-small"></div><p>Scanning dark web databases...</p></div>';
+
+            try {
+                const response = await fetch('/api/security-dashboard');
+                const data = await response.json();
+
+                if (data.hibp_breaches && data.hibp_breaches.length > 0) {
+                    resultsDiv.innerHTML = '<div class="item-list">' + data.hibp_breaches.map(breach => `
+                        <div class="item-row" style="flex-direction: column; align-items: flex-start; gap: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                                <div class="item-info" style="flex: 1;">
+                                    <h4 style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        ${breach.Name}
+                                    </h4>
+                                    <p style="margin-top: 0.25rem;">Breach Date: ${breach.BreachDate} • ${breach.PwnCount ? breach.PwnCount.toLocaleString() + ' accounts affected' : 'Multiple accounts affected'}</p>
+                                </div>
+                                <span class="status-badge danger">Compromised</span>
+                            </div>
+                            ${breach.Description ? `
+                                <p style="font-size: 0.813rem; color: #94a3b8; line-height: 1.5; margin-top: 0.5rem;">
+                                    ${breach.Description.replace(/<[^>]*>/g, '')}
+                                </p>
+                            ` : ''}
+                            ${breach.DataClasses && breach.DataClasses.length > 0 ? `
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                                    <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">Compromised Data:</span>
+                                    ${breach.DataClasses.map(dataClass => `
+                                        <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">
+                                            ${dataClass}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('') + '</div>';
+                } else {
+                    resultsDiv.innerHTML = '<div class="empty-state"><svg class="w-12 h-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><p>No breaches found for your email addresses</p></div>';
+                }
+                /* </CHANGE> */
+            } catch (error) {
+                console.error('[v0] Dark web scan error:', error);
+                resultsDiv.innerHTML = '<div class="empty-state"><p>Error scanning. Please try again later.</p></div>';
+            }
+        }
+
+        async function checkPasskeyOpportunities() {
+            const resultsDiv = document.getElementById('passkeyResults');
+            resultsDiv.innerHTML = '<div class="empty-state"><div class="spinner-small"></div><p>Checking for passkey opportunities...</p></div>';
+
+            try {
+                // First, get all passwords
+                const response = await fetch('/api/security-dashboard');
+                const data = await response.json();
+
+                // Check passkey support for each password with a URL
+                const passwords = data.all_passwords || [];
+                const opportunities = [];
+
+                for (const pwd of passwords) {
+                    if (pwd.url) {
+                        try {
+                            const checkResponse = await fetch('/api/check-passkey-support', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': csrfToken
+                                },
+                                body: JSON.JSON.stringify({
+                                    url: pwd.url,
+                                    password_id: pwd.id
+                                })
+                            });
+
+                            const checkData = await checkResponse.json();
+
+                            if (checkData.supports_passkey) {
+                                opportunities.push({
+                                    id: pwd.id,
+                                    title: pwd.title,
+                                    username: pwd.username,
+                                    url: pwd.url
+                                });
+                            }
+                        } catch (err) {
+                            console.error(`[v0] Error checking passkey for ${pwd.title}:`, err);
+                        }
+                    }
+                }
+
+                // Now fetch opportunities from backend
+                const oppResponse = await fetch('/api/passkey-opportunities');
+                const oppData = await oppResponse.json();
+
+                if (oppData.success && oppData.opportunities && oppData.opportunities.length > 0) {
+                    resultsDiv.innerHTML = '<div class="item-list">' + oppData.opportunities.map(opp => `
+                        <div class="item-row">
+                            <div class="item-info">
+                                <h4>${opp.title}</h4>
+                                <p>${opp.url || 'No URL'}</p>
+                            </div>
+                            <button onclick="convertToPasskey(${opp.id})" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.813rem;">Upgrade to Passkey</button>
+                        </div>
+                    `).join('') + '</div>';
+                } else {
+                    resultsDiv.innerHTML = '<div class="empty-state"><svg class="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><p>No passkey upgrade opportunities found at this time</p></div>';
+                }
+            } catch (error) {
+                console.error('[v0] Passkey opportunities error:', error);
+                resultsDiv.innerHTML = '<div class="empty-state"><p>Error checking passkey opportunities</p></div>';
+            }
+        }
+
+        async function convertToPasskey(passwordId) {
+            const confirmConvert = confirm(
+                'To upgrade to a passkey:\n\n' +
+                '1. Visit the website and go to your account security settings\n' +
+                '2. Look for "Passkeys", "Security Keys", or "WebAuthn" options\n' +
+                '3. Follow the site\'s instructions to create a passkey\n' +
+                '4. Your device will prompt you to use biometrics or PIN\n\n' +
+                'After you\'ve successfully created a passkey on the website, click OK to mark this account as upgraded.'
+            );
+
+            if (!confirmConvert) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/mark-passkey-converted/${passwordId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message with next steps
+                    alert('✓ Account marked as using passkey authentication!\n\nYou can now delete the old password from your vault if you no longer need it.');
+                    // Refresh the passkey opportunities list
+                    checkPasskeyOpportunities();
+                } else {
+                    alert('Failed to update passkey status. Please try again.');
+                }
+            } catch (error) {
+                console.error('[v0] Convert to passkey error:', error);
+                alert('Error updating passkey status. Please check your connection and try again.');
+            }
+        }
+
+        window.addEventListener('load', () => {
+            runSecurityAnalysis();
+        });
+
+        /* Added theme application script to sentinel page */
+        function applyTheme() {
+            const theme = '{{ session.get("theme", "dark") }}';
+
+            if (theme === 'system') {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                    document.body.classList.add('light-theme');
+                } else {
+                    document.body.classList.remove('light-theme');
+                }
+            } else if (theme === 'light') {
+                document.body.classList.add('light-theme');
+            } else {
+                document.body.classList.remove('light-theme');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', applyTheme);
+
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', applyTheme);
+        }
+        /* </CHANGE> */
+    </script>
+</body>
+</html>

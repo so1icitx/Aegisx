@@ -1,39 +1,3325 @@
-<html>
-  <body>
-    <h1>Welcome to so1vault</h1>
-    <table border="1">
-      <tr>
-        <th>email</th>
-        <th>password</th>
-        <th>url</th>
-	<th>last_mod</th>
-	<th>first_mod</th>
-        <th>Action</th>
-      </tr>
-      {% for row in data %}
-      <tr>
-        <td>{{ fernet.decrypt(row[1]).decode() }}</td>
-        <td>{{ fernet.decrypt(row[2]).decode() }}</td>
-        <td>{{ fernet.decrypt(row[3]).decode() }}</td>
-	<td>{{ row[4]}}</td>
-	<td>{{ row[5] }}</td>
-	<td>
-	<form action="{{ url_for('edit', id_num=row[0]) }}" method="GET" style="display:inline;">
-    	<button type="submit">Edit</button>
-  	</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisX- Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  	<!-- Delete button -->
-  	<form action="{{ url_for('delete', id_num=row[0]) }}" method="POST" style="display:inline;">
-    	<button type="submit" onclick="return confirm('Are you sure you want to delete this?')">Delete
-    	</button>
-  	</form>
-	
- 
-          
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
-  </body>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Changed cerulean gradient to dark blue */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.03) 0%, transparent 50%);
+            animation: rotate 30s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Glassmorphism sidebar with transparency */
+        /* Made left sidebar darker to match detail panel */
+        .sidebar {
+            background: rgba(6, 6, 10, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar-item {
+            border-radius: 12px;
+            margin: 4px 12px;
+            padding: 12px 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            font-size: 13px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Changed cerulean hover glow to dark blue */
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .sidebar-item:hover::before {
+            left: 100%;
+        }
+
+        .sidebar-item:hover {
+            /* replacing cerulean rgba(0, 123, 167, 0.1) with dark blue */
+            background: rgba(30, 58, 138, 0.15);
+            transform: translateX(4px);
+            /* replacing cerulean rgba(0, 123, 167, 0.2) with dark blue */
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+        }
+
+        /* Changed cerulean gradient to dark blue gradient */
+        /* Updated sidebar active item border to dark blue  */
+        .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%);
+            color: #ffffff;
+            border-left: 3px solid #1e3a8a;
+            box-shadow: 0 4px 16px rgba(30, 58, 138, 0.5);
+        }
+
+        /* Glassmorphism top search bar */
+        /* Made search bar much darker */
+        .top-search-bar {
+            background: rgba(6, 6, 10, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Enhanced entry row with glassmorphism */
+        /* Make entries unselectable like buttons */
+        .entry-row {
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            /* Make entries button-like: prevent text selection and show pointer cursor */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        /* Changed cerulean gradient to dark blue */
+        .entry-row::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.5), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .entry-row:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            /* replacing cerulean rgba(0, 123, 167, 0.3) with dark blue */
+            border-color: rgba(37, 99, 235, 0.3);
+            transform: translateY(-2px);
+            /* replacing cerulean rgba(0, 123, 167, 0.15) with dark blue */
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
+        }
+
+        .entry-row.selected {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-left: 3px solid rgb(59, 130, 246);
+            background: rgba(40, 40, 60, 0.9);
+            border-color: rgba(0, 123, 167, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 123, 167, 0.25);
+        }
+
+        .entry-row:hover::before {
+            opacity: 1;
+        }
+
+        /* All right panels same width with glassmorphism */
+        /* Made detail panel darker to match left sidebar */
+        .detail-panel {
+            background: rgba(6, 6, 10, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Made add/edit/password gen panels lighter */
+        .add-panel, .edit-panel, .password-gen-panel {
+            background: rgba(18, 18, 25, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Enhanced input fields with glassmorphism */
+        .search-input, .add-input {
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 400;
+            font-size: 13px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Changed Prussian blue focus border to cerulean */
+        .search-input:focus, .add-input:focus {
+            outline: none;
+            border-color: rgba(0, 123, 167, 0.6);
+            background: rgba(25, 25, 40, 0.8);
+            box-shadow: 0 0 0 3px rgba(0, 123, 167, 0.1), inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-input::placeholder, .add-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 13px;
+        }
+
+        /* Blue/purple gradient button instead of red */
+        /* Changed Prussian blue gradient button to cerulean gradient */
+        .add-button {
+            background: linear-gradient(135deg, #007BA7 0%, #0096C7 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(0, 123, 167, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .add-button:hover::before {
+            left: 100%;
+        }
+
+        /* Changed Prussian blue hover to darker cerulean */
+        .add-button:hover {
+            background: linear-gradient(135deg, #005F8A 0%, #007BA7 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 123, 167, 0.5);
+        }
+
+        .add-button:active {
+            transform: translateY(0);
+        }
+
+        /* Enhanced primary button */
+        /* Updated button gradients to dark blue */
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+        }
+
+        /* Enhanced secondary button with glassmorphism */
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+        }
+
+        /* Changed Prussian blue gradient logo to cerulean gradient */
+        /* Updated logo gradient to dark blue */
+        .logo-text {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1e3a8a 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Enhanced info card with glassmorphism */
+        .info-card {
+            background: rgba(20, 20, 30, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Enhanced password slider */
+        .password-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            position: relative;
+        }
+
+        /* Changed Prussian blue slider thumb to cerulean */
+        .password-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007BA7 0%, #0096C7 100%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 123, 167, 0.5);
+        }
+
+        .password-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(0, 123, 167, 0.6);
+        }
+
+        .password-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007BA7 0%, #0096C7 100%);
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 123, 167, 0.5);
+        }
+
+        .password-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(0, 123, 167, 0.6);
+        }
+
+        /* Enhanced generated password display */
+        /* Changed Prussian blue border and text to cerulean */
+        .generated-password {
+            background: transparent;
+            border: none;
+            padding: 1.5rem 0;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 18px;
+            letter-spacing: 2px;
+            word-break: break-all;
+            color: #48CAE4;
+            font-weight: 600;
+            box-shadow: none;
+            text-align: center;
+        }
+
+        /* Enhanced custom checkbox */
+        .checkbox-custom {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* Changed Prussian blue hover to cerulean */
+        .checkbox-custom:hover {
+            border-color: rgba(0, 123, 167, 0.5);
+            background: rgba(0, 123, 167, 0.1);
+            box-shadow: 0 0 12px rgba(0, 123, 167, 0.3);
+        }
+
+        .checkbox-custom:checked {
+            background: linear-gradient(135deg, #007BA7 0%, #0096C7 100%);
+            border-color: #007BA7;
+            box-shadow: 0 4px 12px rgba(0, 123, 167, 0.4);
+        }
+
+        .checkbox-custom:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-text {
+            flex-grow: 1;
+        }
+
+        .password-hidden {
+            font-family: monospace;
+            letter-spacing: 4px;
+            font-size: 16px;
+        }
+
+        /* Eye icon styles */
+        .eye-icon {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Changed Prussian blue glow to cerulean */
+        .eye-icon:hover {
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 8px rgba(0, 123, 167, 0.5));
+        }
+
+        /* Enhanced copy feedback */
+        /* Changed Prussian blue gradient to cerulean */
+        .copy-feedback {
+            position: absolute;
+            right: 40px;
+            top: -30px;
+            background: linear-gradient(135deg, #007BA7 0%, #0096C7 100%);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 16px rgba(0, 123, 167, 0.5);
+        }
+
+        .copy-feedback.show {
+            opacity: 1;
+        }
+
+        .favicon-img {
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Added fallback styling for default favicon */
+        .favicon-img.fallback {
+            background: rgba(30, 30, 45, 0.8);
+            padding: 8px;
+        }
+
+        .error-text {
+            color: #f87171;
+            font-size: 11px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        /* Enhanced close button */
+        .close-button {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+            z-index: 30;
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-button:hover {
+            background: rgba(220, 38, 38, 0.2);
+            color: #f87171;
+            border-color: rgba(220, 38, 38, 0.3);
+            transform: rotate(90deg);
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+        }
+
+        /* Enhanced scrollbar */
+        /* Changed Prussian blue scrollbar to cerulean */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, rgba(0, 123, 167, 0.3) 0%, rgba(0, 150, 199, 0.3) 100%);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, rgba(0, 123, 167, 0.5) 0%, rgba(0, 150, 199, 0.5) 100%);
+        }
+
+        /* Added bulk operations styles */
+        .bulk-actions-bar {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(6, 6, 10, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 123, 167, 0.3);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 123, 167, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .bulk-actions-bar.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Enhanced checkbox styling for better visibility */
+        .checkbox-entry {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .checkbox-entry:hover {
+            border-color: rgba(0, 123, 167, 0.5);
+            background: rgba(0, 123, 167, 0.1);
+        }
+
+        .checkbox-entry:checked {
+            background: linear-gradient(135deg, #007BA7 0%, #0096C7 100%);
+            border-color: #007BA7;
+        }
+
+        .checkbox-entry:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* Add highlight when entry is selected in bulk mode */
+        .entry-row.selected-bulk {
+            background: rgba(0, 123, 167, 0.15);
+            border-color: rgba(0, 123, 167, 0.4);
+        }
+
+        /* Selection mode specific styles */
+        .selection-mode .entry-row {
+            cursor: pointer;
+        }
+
+        .selection-mode .checkbox-entry {
+            display: block !important;
+        }
+
+        /* Added light theme styles */
+        body.light-theme {
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
+            color: #1a1a1a;
+        }
+
+        body.light-theme::before {
+            background: radial-gradient(circle, rgba(0, 123, 167, 0.05) 0%, transparent 50%);
+        }
+
+        body.light-theme .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            border-right: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-theme .sidebar-item {
+            color: #4a4a4a;
+        }
+
+        body.light-theme .sidebar-item:hover {
+            background: rgba(0, 123, 167, 0.1);
+            color: #1a1a1a;
+        }
+
+        body.light-theme .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(0, 123, 167, 0.15) 0%, rgba(0, 150, 199, 0.15) 100%);
+            color: #007BA7;
+            border-left: 3px solid #007BA7;
+        }
+
+        body.light-theme .top-search-bar {
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        /* Added light theme styles for all missing elements */
+        body.light-theme .entry-row {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: #1a1a1a;
+        }
+
+        body.light-theme .entry-row:hover {
+            background: rgba(245, 245, 250, 0.95);
+            border-color: rgba(0, 123, 167, 0.4);
+        }
+
+        body.light-theme .entry-row.selected {
+            background: rgba(230, 240, 255, 0.95);
+            border-color: rgba(0, 123, 167, 0.6);
+        }
+
+        body.light-theme .entry-row p,
+        body.light-theme .entry-row h3 {
+            color: #1a1a1a !important;
+        }
+
+        body.light-theme .entry-row .text-gray-400 {
+            color: #6a6a6a !important;
+        }
+
+        /* Light theme for filter dropdown */
+        body.light-theme #filter-dropdown {
+            background: rgba(255, 255, 255, 0.98) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-theme .filter-option {
+            color: #1a1a1a !important;
+        }
+
+        body.light-theme .filter-option:hover {
+            background: rgba(0, 123, 167, 0.1) !important;
+        }
+
+        body.light-theme #filter-label {
+            color: #1a1a1a !important;
+        }
+
+        /* Light theme for bulk actions bar */
+        body.light-theme .bulk-actions-bar {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        body.light-theme .bulk-actions-bar #selected-count {
+            color: #1a1a1a !important;
+        }
+
+        body.light-theme .bulk-actions-bar .bg-gray-600 {
+            background: rgba(0, 0, 0, 0.1) !important;
+        }
+        /* </CHANGE> */
+
+        /* Added password list background class for theme control */
+        .password-list-bg {
+            background: rgba(4, 4, 8, 0.95);
+        }
+
+        body.light-theme .password-list-bg {
+            background: rgba(250, 250, 250, 0.95) !important;
+            border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+        }
+        /* </CHANGE> */
+
+        body.light-theme .detail-panel,
+        body.light-theme .add-panel,
+        body.light-theme .edit-panel,
+        body.light-theme .password-gen-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-theme .search-input,
+        body.light-theme .add-input {
+            background: rgba(255, 255, 255, 0.8);
+            color: #1a1a1a;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-theme .search-input:focus,
+        body.light-theme .add-input:focus {
+            border-color: rgba(0, 123, 167, 0.6);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        body.light-theme .info-card {
+            background: rgba(245, 245, 250, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        body.light-theme .info-card p {
+            color: #1a1a1a;
+        }
+
+        body.light-theme .text-white {
+            color: #1a1a1a !important;
+        }
+
+        body.light-theme .text-gray-400 {
+            color: #6a6a6a !important;
+        }
+
+        body.light-theme .text-gray-300 {
+            color: #7a7a7a !important;
+        }
+
+        body.light-theme .text-gray-600 {
+            color: #5a5a5a !important;
+        }
+
+        body.light-theme .close-button {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        body.light-theme .close-button:hover {
+            background: rgba(220, 38, 38, 0.2);
+            color: #dc2626;
+        }
+
+        /* Styles for modals */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: rgba(15, 15, 25, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 28rem;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-icon.warning {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .modal-icon.info {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-button {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-button.cancel {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-button.cancel:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .modal-button.confirm {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+        }
+
+        .modal-button.confirm:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+        }
+
+        /* Added focus ring styling to add-input class */
+        .add-input:focus {
+            @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+        }
+
+        /* Added hover effect with cerulean blue outline for field boxes */
+        /* Added hover effect with dark blue highlight for field boxes in details panel */
+        .field-box {
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 14px 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .field-box:hover {
+            background: rgba(30, 40, 60, 0.7);
+            border-color: #2563eb;
+            outline: 2px solid rgba(37, 99, 235, 0.3);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+        }
+
+        .field-label {
+            color: #3b82f6;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        /* </CHANGE> */
+    </style>
+</head>
+<body>
+    <!-- Left sidebar stays the same -->
+    <div class="fixed left-0 top-0 h-full w-80 sidebar flex flex-col z-20">
+        <!-- Added logo image next to so1vault text -->
+        <div class="p-8 flex items-center gap-3">
+            <img src="/static/images/so1vault.png" alt="so1vault logo" class="w-16 h-16 mx-auto mb-3 rounded-xl object-contain">
+            <div>
+                <h1 class="text-2xl font-bold logo-text">AegisX</h1>
+                <p class="text-gray-500 text-xs mt-1 font-medium">Secure Password Manager</p>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto py-2">
+            <!-- Added category filter section -->
+            <div class="px-4 mb-4">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2" data-translate="category">Categories</p>
+                <a href="{{ url_for('dashboard') }}?category=All" class="sidebar-item flex items-center {% if selected_category == 'All' %}active{% else %}text-gray-400{% endif %}">
+                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <span data-translate="allItems">All Items</span>
+                </a>
+                {% for cat in categories %}
+                <a href="{{ url_for('dashboard') }}?category={{ cat }}" class="sidebar-item flex items-center {% if selected_category == cat %}active{% else %}text-gray-400{% endif %}">
+                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <span>{{ cat }}</span>
+                </a>
+                {% endfor %}
+            </div>
+
+            <div class="border-t border-white border-opacity-5 my-2"></div>
+
+            <!-- Update sidebar to highlight active tab -->
+            <a href="{{ url_for('dashboard') }}" class="sidebar-item flex items-center {% if current_tab == 'passwords' or not current_tab %}active{% else %}text-gray-400{% endif %}">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                <span data-translate="passwords">Passwords</span>
+            </a>
+            <!-- Update Passkeys tab with active state -->
+            <a href="{{ url_for('dashboard') }}?tab=passkeys" class="sidebar-item flex items-center {% if current_tab == 'passkeys' %}active{% else %}text-gray-400{% endif %}">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+                <span>Passkeys</span>
+            </a>
+            <a href="#" class="sidebar-item flex items-center text-gray-400">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                <span>{{ t('cards') }}</span>
+            </a>
+            <!-- Added Trash link after Notes -->
+            <!-- Fixed trash tab active state highlighting -->
+            <a href="{{ url_for('trash') }}" class="sidebar-item flex items-center {% if request.endpoint == 'trash' %}active{% else %}text-gray-400{% endif %}">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <span>{{ t('trash') }}</span>
+            </a>
+            <!-- </CHANGE> -->
+        </div>
+        <div class="p-4 border-t border-white border-opacity-5">
+            <!-- Added Sentinel button before Settings -->
+            <a href="{{ url_for('sentinel') }}" class="sidebar-item flex items-center text-gray-400 mb-2">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                <span>Sentinel</span>
+            </a>
+            <!-- </CHANGE> -->
+            <!-- Added settings button next to logout -->
+            <a href="{{ url_for('settings') }}" class="sidebar-item flex items-center text-gray-400 mb-2">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37.996.608 2.296.07 2.572-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span>{{ t('settings') }}</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="sidebar-item flex items-center text-gray-400">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>{{ t('logout') }}</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Top search bar spanning both middle and right sections like Proton Pass -->
+    <div class="fixed left-80 right-0 top-0 top-search-bar z-10">
+        <!-- Added fuzzy search with real-time filtering -->
+        <input type="text" id="search-input" class="search-input flex-1 px-4 py-2.5 w-full" placeholder="{{ t('searchAllItems') }}" oninput="searchEntries()" value="{{ search_query | default('') }}">
+        <!-- Added filter dropdown button -->
+        <div class="relative">
+            <button onclick="toggleFilterDropdown()" class="btn-secondary px-4 py-2.5 text-white flex items-center gap-2 whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                <span id="filter-label" data-translate="filters">Filters</span>
+            </button>
+            <div id="filter-dropdown" class="absolute right-0 mt-2 w-64 bg-gray-900 border border-gray-700 rounded-lg shadow-xl hidden z-50" style="backdrop-filter: blur(20px); background: rgba(10, 10, 15, 0.98);">
+                <div class="p-3">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Filter by</p>
+                    <button onclick="applyFilter('all')" class="filter-option w-full text-left px-3 py-2 rounded-lg text-sm text-white hover:bg-white hover:bg-opacity-10 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        <span data-translate="allPasswords">All Passwords</span>
+                    </button>
+                    <!-- Fixed color coding - weak is yellow, vulnerable is red -->
+                    <button onclick="applyFilter('weak')" class="filter-option w-full text-left px-3 py-2 rounded-lg text-sm text-white hover:bg-white hover:bg-opacity-10 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <span data-translate="weakPasswords">Weak Passwords</span>
+                    </button>
+                    <!-- Fixed filter dropdown with breached instead of vulnerable -->
+                    <button onclick="applyFilter('breached')" class="filter-option w-full text-left px-3 py-2 rounded-lg text-sm text-white hover:bg-white hover:bg-opacity-10 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <span data-translate="breachedPasswords">Breached Passwords</span>
+                    </button>
+                    <button onclick="applyFilter('duplicates')" class="filter-option w-full text-left px-3 py-2 rounded-lg text-sm text-white hover:bg-white hover:bg-opacity-10 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span data-translate="duplicatePasswords">Duplicate Passwords</span>
+                    </button>
+                    <button onclick="applyFilter('favorites')" class="filter-option w-full text-left px-3 py-2 rounded-lg text-sm text-white hover:bg-white hover:bg-opacity-10 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4 text-yellow-400" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+                        <span data-translate="favoritesOnly">Favorites Only</span>
+                    </button>
+                    <button onclick="applyFilter('recent')" class="filter-option w-full text-left px-3 py-2 rounded-lg text-sm text-white hover:bg-white hover:bg-opacity-10 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span data-translate="recentlyModified">Recently Modified</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Redesigned create item button as dropdown menu -->
+        <div class="relative">
+            <button id="create-item-btn" onclick="toggleCreateDropdown()" class="add-button flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                <span data-translate="createItem">Create item</span>
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+
+            <!-- Create dropdown menu for different credential types -->
+            <div id="create-dropdown" class="hidden absolute top-full mt-2 right-0 bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-64 z-50" style="backdrop-filter: blur(20px); background: rgba(10, 10, 15, 0.98);">
+                <div class="py-2">
+                    <button onclick="openAddPanel('login')" class="w-full px-4 py-3 text-left hover:bg-gray-800 flex items-center gap-3 text-white">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        <div>
+                            <div class="font-semibold text-sm">Login</div>
+                            <div class="text-xs text-gray-400">Username, URL, and password</div>
+                        </div>
+                    </button>
+                    <button onclick="openAddPanel('passkey')" class="w-full px-4 py-3 text-left hover:bg-gray-800 flex items-center gap-3 text-white">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                        <div>
+                            <div class="font-semibold text-sm">Passkey</div>
+                            <div class="text-xs text-gray-400">Modern passwordless authentication</div>
+                        </div>
+                    </button>
+                    <button onclick="openAddPanel('password')" class="w-full px-4 py-3 text-left hover:bg-gray-800 flex items-center gap-3 text-white">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <div>
+                            <div class="font-semibold text-sm">Password</div>
+                            <div class="text-xs text-gray-400">Generate a secure password</div>
+                        </div>
+                    </button>
+                    <button onclick="openAddPanel('card')" class="w-full px-4 py-3 text-left hover:bg-gray-800 flex items-center gap-3 text-white opacity-50 cursor-not-allowed" disabled>
+                        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        <div>
+                            <div class="font-semibold text-sm">Credit Card</div>
+                            <div class="text-xs text-gray-400">Coming soon</div>
+                        </div>
+                    </button>
+                    <button onclick="openAddPanel('identity')" class="w-full px-4 py-3 text-left hover:bg-gray-800 flex items-center gap-3 text-white opacity-50 cursor-not-allowed" disabled>
+                        <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
+                        <div>
+                            <div class="font-semibold text-sm">Identity</div>
+                            <div class="text-xs text-gray-400">Coming soon</div>
+                        </div>
+                    </button>
+                    <button onclick="openAddPanel('crypto')" class="w-full px-4 py-3 text-left hover:bg-gray-800 flex items-center gap-3 text-white opacity-50 cursor-not-allowed" disabled>
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <div>
+                            <div class="font-semibold text-sm">Crypto Wallet</div>
+                            <div class="text-xs text-gray-400">Coming soon</div>
+                        </div>
+                    </button>
+                    <button onclick="openAddPanel('note')" class="w-full px-4 py-3 text-left hover:bg-gray-800 flex items-center gap-3 text-white opacity-50 cursor-not-allowed" disabled>
+                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <div>
+                            <div class="font-semibold text-sm">Secure Note</div>
+                            <div class="text-xs text-gray-400">Coming soon</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- </CHANGE> -->
+    </div>
+
+    <!-- Move security filter banner to top-right of detail panel -->
+    <!-- <div id="security-filter-banner" class="fixed right-8 top-24 w-80 z-50 hidden"> -->
+        <!-- <div class="bg-gradient-to-r from-blue-600 to-purple-600 border border-blue-500/50 rounded-lg shadow-2xl px-4 py-3"> -->
+            <!-- <div class="flex items-start gap-3"> -->
+                <!-- <svg class="w-5 h-5 text-white flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> -->
+                    <!-- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path> -->
+                <!-- </svg> -->
+                <!-- <div class="flex-1 min-w-0"> -->
+                    <!-- <h3 id="banner-title" class="text-white font-semibold text-sm mb-0.5"></h3> -->
+                    <!-- <p id="banner-message" class="text-blue-100 text-xs leading-snug"></p> -->
+                <!-- </div> -->
+                <!-- <button onclick="clearSecurityFilter()" class="text-blue-200 hover:text-white transition-colors flex-shrink-0"> -->
+                    <!-- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> -->
+                        <!-- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> -->
+                    <!-- </svg> -->
+                <!-- </button> -->
+            <!-- </div> -->
+        <!-- </div> -->
+    <!-- </div> -->
+
+    <!-- // Move security filter banner to right sidebar with narrow width and prevent filter reset on close -->
+    <div id="security-filter-banner" class="hidden fixed right-8 top-24 w-96 max-w-sm z-50">
+        <div class="bg-gradient-to-br from-blue-600 to-indigo-600 border border-blue-400/30 rounded-xl shadow-2xl p-4 backdrop-blur-sm">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-white flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="flex-1 min-w-0">
+                    <h3 id="banner-title" class="text-white font-semibold text-sm mb-1"></h3>
+                    <p id="banner-message" class="text-blue-50 text-xs leading-relaxed"></p>
+                </div>
+                <button onclick="closeSecurityFilterBanner()" class="text-blue-200 hover:text-white transition-colors flex-shrink-0 p-1 hover:bg-white/10 rounded">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk actions floating toolbar -->
+    <div id="bulk-actions-bar" class="bulk-actions-bar">
+        <span id="selected-count" class="text-white font-semibold text-sm">0 selected</span>
+        <div class="h-6 w-px bg-gray-600"></div>
+
+        <!-- Updating bulk action buttons to match trash page and adding export modal -->
+        <!-- Move to Bin button (matching trash delete button style) -->
+        <button onclick="bulkDelete()" class="btn-danger px-4 py-2 text-white text-sm flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            <span data-translate="bulkDelete">Move to Bin</span>
+        </button>
+
+        <!-- Export button (matching trash restore button style) -->
+        <!-- <button onclick="openExportModal()" class="btn-primary px-4 py-2 text-white text-sm flex items-center gap-2"> -->
+        <!-- Updated export button to use the new showExportModal function -->
+        <button onclick="showExportModal()" class="btn-primary px-4 py-2 text-white text-sm flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <span data-translate="bulkExport">Export</span>
+        </button>
+        <!-- </CHANGE> -->
+
+        <button onclick="clearSelection()" class="btn-secondary px-4 py-2 text-white text-sm">
+            <span data-translate="cancel">Cancel</span>
+        </button>
+    </div>
+
+    <!-- Middle section with password list, narrower to prevent overlap -->
+    <!-- Increased width to 700px and removed gap -->
+    <!-- Made middle section much darker -->
+    <!-- Added proper scrolling behavior and scroll position preservation -->
+    <div id="password-list-container" class="fixed left-80 top-[73px] bottom-0 w-[700px] overflow-y-auto p-6 password-list-bg" style="scroll-behavior: smooth;">
+        {% if data %}
+        <!-- Added select button next to Passwords count header -->
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-2xl font-bold text-white">
+                <span data-translate="passwords">Passwords</span> (<span id="password-count">0</span>)
+            </h1>
+            <!-- replaced cerulean gradient with dark blue -->
+            <button id="selection-mode-btn" onclick="toggleSelectionMode()" class="px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#3b82f6] text-white text-sm font-medium rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span data-translate="select">Select</span>
+            </button>
+        </div>
+        <div id="password-list" class="space-y-2.5">
+            {% for row in data %}
+            <!-- Removed checkbox from default view - will be shown only in selection mode -->
+            <div class="entry-row flex items-center p-4 user-select-none cursor-pointer {% if selected_entry and selected_entry.id == row.id %}selected{% endif %}" data-id="{{ row.id }}" data-title="{{ row.title | default('') | lower }}" data-username="{{ row.username | default('') | lower }}" data-category="{{ row.category | default('Uncategorized') | lower }}" data-strength="" data-is-favorite="{{ 'true' if row.is_favorite else 'false' }}" onclick="handleEntryClick(event, {{ row.id }})">
+                <input type="checkbox" class="checkbox-entry mr-3 hidden" data-id="{{ row.id }}" onclick="toggleEntrySelection(event, {{ row.id }})" />
+                <div class="flex items-center flex-1 min-w-0">
+                    <img src="{% if row.url %}https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url={{ row.url }}&size=64{% else %}/static/images/default.jpg{% endif %}" alt="Favicon" class="w-9 h-9 mr-4 favicon-img" onerror="this.onerror=null; this.src='/static/images/default.jpg'; this.classList.add('fallback');">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-white text-sm truncate">{{ row.title | default('Untitled Entry') }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5 truncate">{{ row.username | default('No username') }}</p>
+                    </div>
+                    <!-- Added favorite star icon -->
+                    <button onclick="toggleFavorite(event, {{ row.id }})" class="favorite-btn mr-3 p-2 rounded-lg transition-all duration-200 hover:bg-white hover:bg-opacity-10" title="{{ t('addToFavorites') if not row.is_favorite else t('removeFromFavorites') }}">
+                        <svg class="w-5 h-5 {% if row.is_favorite %}text-yellow-400 fill-current{% else %}text-gray-500{% endif %}" fill="{% if row.is_favorite %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                        </svg>
+                    </button>
+                    <svg class="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-20">
+            <svg class="w-16 h-16 mx-auto text-gray-700 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <p class="text-gray-400 text-lg font-medium" data-translate="noPasswordsSaved">No passwords saved yet</p>
+            <p class="text-gray-600 text-xs mt-2" data-translate="clickCreateItem">Click Create item to add your first password</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Replaced placeholder detail panel with actual structure -->
+    <div id="detail-panel" class="detail-panel fixed right-0 top-[73px] bottom-0 w-[900px] p-8 overflow-y-auto">
+        {% if selected_entry %}
+        <div class="flex items-center justify-between mb-6">
+            <!-- Show title instead of URL -->
+            <h2 class="text-lg font-bold text-white">{{ selected_entry.title | default('Untitled Entry') }}</h2>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleEditPanel({{ selected_entry.id }})" class="btn-secondary px-3 py-2 text-white flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    <span data-translate="edit">Edit</span>
+                </button>
+                <!-- Changed delete button to use showModal -->
+                <button onclick="deleteEntry({{ selected_entry.id }})" class="btn-danger px-3 py-2 text-white">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
+        </div>
+
+
+
+        <div class="space-y-5">
+            <!-- Added category display -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <span data-translate="category">Category</span>
+                </label>
+                <div class="info-card p-3.5">
+                    <p class="text-white font-medium text-sm">{{ selected_entry.category | default('Uncategorized') }}</p>
+                </div>
+            </div>
+
+            <!-- Redesigned URL field with bundled layout for server-rendered version -->
+            <div class="info-card flex items-start px-4 py-3">
+                <span class="flex justify-center items-center shrink-0 pr-4 mt-2" style="color: var(--muted-foreground);">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                    </svg>
+                </span>
+                <div class="w-full min-w-0">
+                    <div class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Website URL</div>
+                    <!-- Removed default filter, value now comes from backend -->
+                    <div class="text-white text-sm font-medium mt-1 break-all">{{ selected_entry.url }}</div>
+                </div>
+            </div>
+
+            <!-- Redesigned Username field with bundled layout for server-rendered version -->
+            <div class="info-card flex items-start px-4 py-3">
+                <span class="flex justify-center items-center shrink-0 pr-4 mt-2" style="color: var(--muted-foreground);">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                </span>
+                <div class="w-full min-w-0">
+                    <div class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Username</div>
+                    <!-- Removed default filter, value now comes from backend -->
+                    <div class="text-white text-sm font-medium mt-1 select-none break-all">{{ selected_entry.username }}</div>
+                </div>
+            </div>
+
+            <!-- Redesigned Password field with bundled layout for server-rendered version -->
+            <div class="info-card flex items-start px-4 py-3">
+                <span class="flex justify-center items-center shrink-0 pr-4 mt-2" style="color: var(--muted-foreground);">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                </span>
+                <div class="w-full min-w-0">
+                    <div class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Password</div>
+                    <div id="password-text"
+                        class="text-white text-sm font-medium mt-1 cursor-pointer select-none break-all font-mono"
+                        onclick="handlePasswordClick()">••••••••</div>
+                </div>
+                <span class="shrink-0 ml-3 flex flex-row-reverse items-center gap-2">
+                    <button class="p-2 hover:bg-gray-600/50 rounded-lg transition-colors"
+                            onclick="togglePasswordVisibility(event)"
+                            title="Toggle password visibility">
+                        <img id="eye-toggle-icon" src="/static/images/eyeclose.png" alt="Toggle password visibility" class="w-5 h-5">
+                    </button>
+                    <div id="view-password-strength" class="flex items-center gap-1.5 hidden">
+                        <svg id="view-strength-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5"></svg>
+                        <span id="view-strength-text" class="text-xs font-semibold whitespace-nowrap"></span>
+                    </div>
+                </span>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>LAST MODIFIED</span>
+                </label>
+                <div class="info-card p-3.5">
+                    <!-- Removed default filter, value now comes from backend -->
+                    <p class="text-gray-400 text-xs">{{ selected_entry.last_modified }}</p>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>CREATED</span>
+                </label>
+                <div class="info-card p-3.5">
+                    <!-- Removed default filter, value now comes from backend -->
+                    <p class="text-gray-400 text-xs">{{ selected_entry.first_created }}</p>
+                </div>
+            </div>
+
+            <!-- Password history section -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    <span data-translate="passwordHistory">PASSWORD HISTORY</span>
+                </label>
+                <div id="password-history-container" class="info-card p-3.5">
+                    <p class="text-gray-400 text-xs" data-translate="noHistoryAvailable">Loading history...</p>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-16">
+            <svg class="w-14 h-14 mx-auto text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+            <p class="text-gray-400 font-medium text-sm">Select an entry to view details</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Updated all sliding panels to match new 900px width -->
+    <div id="edit-panel" class="edit-panel fixed right-0 top-0 min-h-screen w-[900px] p-8 transition-all duration-300 ease-in-out z-20 overflow-y-auto" style="right: -900px;">
+        <button onclick="closeEditPanel()" class="close-button">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+        <h2 class="text-lg font-bold mb-6 text-white" data-translate="editEntry">Edit Entry</h2>
+        <div class="space-y-5">
+            <!-- Added category dropdown -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <span data-translate="category">CATEGORY</span>
+                </label>
+                <select id="edit-category" class="add-input w-full px-4 py-2.5 text-sm" onchange="handleCategoryChange('edit')">
+                    <option value="Uncategorized" data-translate="uncategorized">Uncategorized</option>
+                    <option value="Personal" data-translate="personal">Personal</option>
+                    <option value="Work" data-translate="work">Work</option>
+                    <option value="Banking" data-translate="banking">Banking</option>
+                    <option value="Social Media" data-translate="socialMedia">Social Media</option>
+                    <option value="Shopping" data-translate="shopping">Shopping</option>
+                    <option value="Entertainment" data-translate="entertainment">Entertainment</option>
+                    <option value="Other" data-translate="other">Other</option>
+                    <option value="__custom__" data-translate="addCustomCategory">+ Add Custom Category</option>
+                </select>
+                <input type="text" id="edit-category-custom" class="add-input w-full px-4 py-2.5 text-sm mt-2 hidden" placeholder="Enter category name" data-translate="enterCategoryName">
+            </div>
+            <!-- Added icons to match detail sidebar -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    <span data-translate="title">Title</span>
+                </label>
+                <input type="text" id="edit-title" class="add-input w-full px-4 py-2.5 text-sm" placeholder="My Account" value="{{ selected_entry.title | default('') }}">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                    <span data-translate="url">Website URL</span>
+                </label>
+                <input type="text" id="edit-url" class="add-input w-full px-4 py-2.5 text-sm" placeholder="https://example.com" value="{{ selected_entry.url | default('') }}">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    <span data-translate="username">Username</span>
+                </label>
+                <input type="text" id="edit-username" class="add-input w-full px-4 py-2.5 text-sm" placeholder="username" value="{{ selected_entry.username | default('') }}">
+                <p id="edit-username-error" class="error-text hidden">Username is required</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                    <span data-translate="password">Password</span>
+                </label>
+                <div class="flex gap-2.5">
+                    <input type="text" id="edit-password" class="add-input flex-1 px-4 py-2.5 font-mono text-sm" placeholder="Enter password" value="{{ selected_entry.password | default('') }}" oninput="checkPasswordStrength('edit')">
+                    <button onclick="openPasswordGenerator('edit-password')" class="btn-secondary px-4 py-2.5 text-white whitespace-nowrap text-sm" data-translate="generatePassword">Generate</button>
+                </div>
+                <!-- Updated password strength indicator with different icons and colors -->
+                <div id="edit-password-strength" class="mt-2 flex items-center gap-2 hidden">
+                    <svg id="edit-strength-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Path will be set by JavaScript -->
+                    </svg>
+                    <span id="edit-strength-text" class="text-xs font-semibold"></span>
+                </div>
+                <p id="edit-password-error" class="error-text hidden">Password is required</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    <span data-translate="totpSecret">TOTP Secret (Optional)</span>
+                </label>
+                <input type="text" id="edit-totp" class="add-input w-full px-4 py-2.5 font-mono text-sm" placeholder="Base32 secret key" value="{{ selected_entry.totp_secret | default('') }}">
+                <p class="text-gray-500 text-xs mt-1">For two-factor authentication codes</p>
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button onclick="submitEditForm()" class="btn-primary flex-1 px-4 py-2.5 text-white text-sm">
+                    <span data-translate="save">Save Changes</span>
+                </button>
+                <button onclick="closeEditPanel()" class="btn-secondary px-4 py-2.5 text-white text-sm">
+                    <span data-translate="cancel">Cancel</span>
+                </button>
+            </div>
+            <p id="edit-error" class="error-text hidden"></p>
+        </div>
+    </div>
+
+    <!-- Add passkey creation form in the add panel -->
+    <div id="add-panel" class="add-panel fixed right-0 top-0 min-h-screen w-[900px] p-8 transition-all duration-300 ease-in-out z-20 overflow-y-auto" style="right: -900px;">
+        <button onclick="closeAddPanel()" class="close-button">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <!-- Add tabs for Password vs Passkey -->
+        <div class="hidden gap-4 mb-6 border-b border-gray-700">
+            <button id="add-password-tab" onclick="switchAddTab('password')" class="pb-3 px-1 text-sm font-semibold text-white border-b-2 border-blue-500">
+                Add Password
+            </button>
+            <button id="add-passkey-tab" onclick="switchAddTab('passkey')" class="pb-3 px-1 text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-white">
+                Add Passkey
+            </button>
+        </div>
+
+        <!-- Password form (existing) -->
+        <div id="add-password-form" class="space-y-5">
+            <h2 class="text-lg font-bold mb-6 text-white" data-translate="addNewEntry">Add New Entry</h2>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <span data-translate="category">CATEGORY</span>
+                </label>
+                <select id="add-category" class="add-input w-full px-4 py-2.5 text-sm" onchange="handleCategoryChange('add')">
+                    <option value="Uncategorized" data-translate="uncategorized">Uncategorized</option>
+                    <option value="Personal" data-translate="personal">Personal</option>
+                    <option value="Work" data-translate="work">Work</option>
+                    <option value="Banking" data-translate="banking">Banking</option>
+                    <option value="Social Media" data-translate="socialMedia">Social Media</option>
+                    <option value="Shopping" data-translate="shopping">Shopping</option>
+                    <option value="Entertainment" data-translate="entertainment">Entertainment</option>
+                    <option value="Other" data-translate="other">Other</option>
+                    <option value="__custom__" data-translate="addCustomCategory">+ Add Custom Category</option>
+                </select>
+                <input type="text" id="add-category-custom" class="add-input w-full px-4 py-2.5 text-sm mt-2 hidden" placeholder="Enter category name" data-translate="enterCategoryName">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    <span data-translate="title">Title</span>
+                </label>
+                <input type="text" id="add-title" class="add-input w-full px-4 py-2.5 text-sm" placeholder="My Account">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                    <span data-translate="url">Website URL</span>
+                </label>
+                <input type="text" id="add-url" class="add-input w-full px-4 py-2.5 text-sm" placeholder="https://example.com">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    <span data-translate="username">Username</span>
+                </label>
+                <input type="text" id="add-username" class="add-input w-full px-4 py-2.5 text-sm" placeholder="username">
+                <p id="add-username-error" class="error-text hidden">Username is required</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                    <span data-translate="password">Password</span>
+                </label>
+                <div class="flex gap-2.5">
+                    <input type="text" id="add-password" class="add-input flex-1 px-4 py-2.5 font-mono text-sm" placeholder="Enter password" oninput="checkPasswordStrength('add')">
+                    <button onclick="openPasswordGenerator('add-password')" class="btn-secondary px-4 py-2.5 text-white whitespace-nowrap text-sm" data-translate="generatePassword">Generate</button>
+                </div>
+                <!-- Updated password strength indicator with different icons and colors -->
+                <div id="add-password-strength" class="mt-2 flex items-center gap-2 hidden">
+                    <svg id="add-strength-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Path will be set by JavaScript -->
+                    </svg>
+                    <span id="add-strength-text" class="text-xs font-semibold"></span>
+                </div>
+                <p id="add-password-error" class="error-text hidden">Password is required</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    <span data-translate="totpSecret">TOTP Secret (Optional)</span>
+                </label>
+                <input type="text" id="add-totp" class="add-input w-full px-4 py-2.5 font-mono text-sm" placeholder="Base32 secret key">
+                <p class="text-gray-500 text-xs mt-1">For two-factor authentication codes</p>
+            </div>
+        </div>
+
+        <!-- Passkey form (new) -->
+        <div id="add-passkey-form" class="space-y-5 hidden">
+            <h2 class="text-lg font-bold mb-6 text-white">Add Passkey</h2>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    <span>Title</span>
+                </label>
+                <input type="text" id="add-passkey-title" class="add-input w-full px-4 py-2.5 text-sm" placeholder="My Account">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                    <span>Website URL</span>
+                </label>
+                <input type="text" id="add-passkey-url" class="add-input w-full px-4 py-2.5 text-sm" placeholder="https://example.com">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    <span>Username</span>
+                </label>
+                <input type="text" id="add-passkey-username" class="add-input w-full px-4 py-2.5 text-sm" placeholder="username">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+                    <span>Credential ID</span>
+                </label>
+                <input type="text" id="add-passkey-credential" class="add-input w-full px-4 py-2.5 font-mono text-sm" placeholder="Auto-generated passkey ID">
+                <p class="text-gray-500 text-xs mt-1">This will be generated when you create the passkey on the website</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <span>Category</span>
+                </label>
+                <select id="add-passkey-category" class="add-input w-full px-4 py-2.5 text-sm">
+                    <option value="Uncategorized">Uncategorized</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Work">Work</option>
+                    <option value="Banking">Banking</option>
+                    <option value="Social Media">Social Media</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button onclick="submitPasskeyForm()" class="btn-primary flex-1 px-4 py-2.5 text-white text-sm">
+                    Add Passkey
+                </button>
+                <button onclick="closeAddPanel()" class="btn-secondary px-4 py-2.5 text-white text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="password-gen-panel" class="password-gen-panel fixed right-0 top-0 min-h-screen w-[900px] p-8 transition-all duration-300 ease-in-out z-30 overflow-y-auto" style="right: -900px;">
+        <button onclick="closePasswordGenerator()" class="close-button">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+        <h2 class="text-lg font-bold mb-6 text-white" data-translate="passwordGenerator">Password Generator</h2>
+        <div class="space-y-6">
+            <div class="generated-password text-center min-h-[80px] flex items-center justify-center" id="generated-password">
+                <span data-translate="adjustSettings">Adjust settings to generate</span>
+            </div>
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <label class="block text-xs font-semibold text-gray-300" data-translate="length">Length</label>
+                    <span class="text-indigo-400 font-bold text-xl" id="length-value">16</span>
+                </div>
+                <input type="range" min="6" max="64" value="16" class="password-slider" id="password-length" oninput="updatePasswordLength()">
+                <div class="flex justify-between text-xs text-gray-600 mt-2">
+                    <span>6</span>
+                    <span>64</span>
+                </div>
+            </div>
+            <div class="space-y-3.5">
+                <label class="block text-xs font-semibold text-gray-300 mb-3" data-translate="characterTypes">Character Types</label>
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="include-uppercase" class="checkbox-custom" checked onchange="generateLivePassword()">
+                    <label for="include-uppercase" class="text-gray-300 cursor-pointer font-medium text-sm" data-translate="uppercase">Uppercase (A-Z)</label>
+                </div>
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="include-lowercase" class="checkbox-custom" checked onchange="generateLivePassword()">
+                    <label for="include-lowercase" class="text-gray-300 cursor-pointer font-medium text-sm" data-translate="lowercase">Lowercase (a-z)</label>
+                </div>
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="include-numbers" class="checkbox-custom" checked onchange="generateLivePassword()">
+                    <label for="include-numbers" class="text-gray-300 cursor-pointer font-medium text-sm" data-translate="numbers">Numbers (0-9)</label>
+                </div>
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="include-symbols" class="checkbox-custom" checked onchange="generateLivePassword()">
+                    <label for="include-symbols" class="text-gray-300 cursor-pointer font-medium text-sm" data-translate="symbols">Symbols (!@#$%^&*)</label>
+                </div>
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button onclick="useGeneratedPassword()" class="btn-primary flex-1 px-4 py-2.5 text-white"><span data-translate="usePassword">Use Password</span></button>
+                <button onclick="closePasswordGenerator()" class="btn-secondary px-4 py-2.5 text-white"><span data-translate="cancel">Cancel</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal (matching trash page style) -->
+    <div id="confirm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content text-center">
+            <div class="modal-icon warning">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <h3 id="modal-title" class="text-xl font-bold text-white mb-2">Move to Bin</h3>
+            <p id="modal-message" class="text-gray-400 text-sm mb-6">Do you want to move this item to trash?</p>
+            <div class="modal-buttons">
+                <button class="modal-button cancel" onclick="closeModal()">Cancel</button>
+                <button id="modal-confirm-btn" class="modal-button confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Format Modal (matching trash page style) -->
+    <div id="export-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content text-center">
+            <div class="modal-icon info">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Export Format</h3>
+            <p class="text-gray-400 text-sm mb-6">Choose the format for exporting your passwords</p>
+            <div class="modal-buttons">
+                <button class="modal-button cancel" onclick="closeExportModal()">Cancel</button>
+                <button class="modal-button confirm csv" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);" onclick="confirmExport('csv')">CSV</button>
+                <button class="modal-button confirm pgp" onclick="confirmExport('pgp')">PGP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PGP Password Modal -->
+    <div id="pgp-password-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content text-center">
+            <div class="modal-icon warning">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">PGP Encryption</h3>
+            <p class="text-gray-400 text-sm mb-4">Enter a password to encrypt your export</p>
+            <input type="password" id="pgp-password-input" placeholder="Encryption password" class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6">
+            <div class="modal-buttons">
+                <button class="modal-button cancel" onclick="closePgpPasswordModal()">Cancel</button>
+                <button class="modal-button confirm" onclick="confirmPgpPassword()">Export</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Big View Modal -->
+    <div id="big-view-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden items-center justify-center p-8">
+        <div class="w-full max-w-6xl">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-8">
+                <h2 id="big-view-title" class="text-2xl font-bold text-white"></h2>
+                <button onclick="closeBigView()" class="p-2 hover:bg-gray-700/50 rounded-lg transition-colors">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div id="big-view-content" class="bg-gray-800/50 rounded-2xl p-12 border border-gray-700/50 backdrop-blur-md">
+                <div id="big-view-text" class="text-center font-mono leading-relaxed break-all"></div>
+            </div>
+
+            <!-- Copy Button -->
+            <div class="flex justify-center mt-8">
+                <!-- replaced cerulean classes with dark blue gradient -->
+                <button onclick="copyBigViewText()" class="px-8 py-4 bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:opacity-80 text-white rounded-xl font-semibold transition-colors flex items-center gap-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2H9a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const csrfToken = "{{ csrf_token }}";
+        const translations = {{ translations | tojson }};
+        let currentLang = "{{ session.get('language', 'en') }}";
+        let selected_entry = {% if selected_entry %}{{ selected_entry | tojson }}{% else %}null{% endif %};
+        let selectedEntries = new Set();
+        let targetPasswordInput = null;
+        let currentFilter = 'all';
+        let allPasswordStrengths = {};
+        let passwordVisible = false;
+        let entries = []; // To store all entries for easier access in JS
+        let entriesData = {}; // Store entry metadata including favorite status
+        let windowSelectedEntryPassword = null; // Store the password of the currently selected entry globally
+
+        let clipboardClearTimeout = null;
+        let clipboardContainsPassword = false;
+        let isSelectionMode = false; // Track selection mode state
+        let bigViewCurrentText = '';
+        // </CHANGE>
+
+        // Updated modal system integration
+        let modalCallback = null;
+
+        function showModal(title, message, onConfirm) {
+            const modal = document.getElementById('confirm-modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            modalCallback = onConfirm;
+
+            modal.style.display = 'flex';
+            // Add a slight delay to allow the display: flex to apply before animation starts
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
+
+
+            document.getElementById('modal-confirm-btn').onclick = () => {
+                if (modalCallback) modalCallback();
+                closeModal();
+            };
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('show');
+            // Wait for the transition to finish before setting display to none
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalCallback = null;
+            }, 300); // Should match the transition duration in CSS
+        }
+
+        function showExportModal() {
+            if (selectedEntries.size === 0) {
+                showModal('No Selection', 'Please select at least one password to export.', null);
+                return;
+            }
+            const modal = document.getElementById('export-modal');
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
+        }
+
+        function closeExportModal() {
+            const modal = document.getElementById('export-modal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300); // Should match the transition duration in CSS
+        }
+
+        async function performExport(format, encryptionPassword) {
+            const idsToExport = Array.from(selectedEntries);
+
+            try {
+                const response = await fetch('/dashboard/bulk-export', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        ids: idsToExport,
+                        format: format,
+                        encryption_password: encryptionPassword,
+                        _csrf_token: csrfToken
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+
+                    const date = new Date().toISOString().split('T')[0];
+                    const extension = format === 'pgp' ? 'pgp' : 'csv';
+                    link.download = `aegisx_export_${date}.${extension}`;
+
+                    link.click();
+                    URL.revokeObjectURL(url);
+
+                    showModal('Success', `Successfully exported ${idsToExport.length} password${idsToExport.length === 1 ? '' : 's'} as ${format.toUpperCase()}`, null);
+
+                    clearSelection();
+                } else {
+                    const error = await response.json();
+                    showModal('Error', `Export failed: ${error.error || 'Unknown error'}`, null);
+                }
+            } catch (error) {
+                console.error('Export error:', error);
+                showModal('Error', 'Failed to export passwords. Please try again.', null);
+            }
+        }
+
+        async function bulkDelete() {
+            if (selectedEntries.size === 0) return;
+
+            const count = selectedEntries.size;
+            showModal(
+                'Move to Bin',
+                `Do you want to move ${count} ${count === 1 ? 'item' : 'items'} to trash?`,
+                async () => {
+                    const idsToDelete = Array.from(selectedEntries);
+                    let deletedCount = 0;
+                    let failedCount = 0;
+
+                    for (const id of idsToDelete) {
+                        try {
+                            const response = await fetch(`/dashboard/delete/${id}/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': csrfToken
+                                },
+                                credentials: 'include',
+                                body: JSON.stringify({ _csrf_token: csrfToken })
+                            });
+
+                            if (response.ok) {
+                                deletedCount++;
+                                const entryElement = document.querySelector(`.entry-row[data-id="${id}"]`);
+                                if (entryElement) {
+                                    entryElement.remove();
+                                }
+                            } else {
+                                failedCount++;
+                            }
+                        } catch (error) {
+                            console.error('Error deleting entry:', error);
+                            failedCount++;
+                        }
+                    }
+
+                    if (failedCount > 0) {
+                        showModal('Partial Success', `Moved ${deletedCount} entries to trash. Failed to delete ${failedCount} entries.`, null);
+                    } else {
+                        showModal('Success', `Moved ${deletedCount} ${deletedCount === 1 ? 'entry' : 'entries'} to trash.`, null);
+                    }
+
+                    clearSelection();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                }
+            );
+        }
+
+
+        // Function to delete an entry (called from detail panel)
+        function deleteEntry(id) {
+            showModal(
+                'Move to Bin',
+                'Do you want to move this item to trash?',
+                async () => {
+                    const csrfToken = document.querySelector('input[name="_csrf_token"]')?.value || '';
+
+                    try {
+                        const response = await fetch(`/delete/${id}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({ _csrf_token: csrfToken })
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            const errorData = await response.json();
+                            showModal('Error', errorData.error || 'Failed to delete entry. Please try again.', null);
+                        }
+                    } catch (error) {
+                        console.error('Error deleting entry:', error);
+                        showModal('Error', 'Network error. Please try again.', null);
+                    }
+                }
+            );
+        }
+
+        function showPgpPasswordModal(format) {
+            window.pendingExportFormat = format;
+            const modal = document.getElementById('pgp-password-modal');
+            const input = document.getElementById('pgp-password-input');
+            input.value = '';
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+                input.focus();
+            });
+        }
+
+        function closePgpPasswordModal() {
+            const modal = document.getElementById('pgp-password-modal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                window.pendingExportFormat = null;
+            }, 300);
+        }
+
+        function confirmPgpPassword() {
+            const password = document.getElementById('pgp-password-input').value;
+            if (!password) {
+                alert('Password is required for PGP encryption.');
+                return;
+            }
+            const format = window.pendingExportFormat;
+            closePgpPasswordModal();
+            performExport(format, password);
+        }
+
+        // Function to schedule clipboard clear
+        function scheduleClipboardClear() {
+            const timeoutSeconds = localStorage.getItem('clipboard_timeout');
+            const actualTimeout = timeoutSeconds || '30';
+
+            if (actualTimeout === "0" || actualTimeout === "never") {
+                return;
+            }
+
+            const payload = { timeout: actualTimeout };
+
+            fetch('/api/schedule-clipboard-clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                credentials: 'include',
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .catch(error => {
+                console.error('Failed to schedule clipboard clear:', error);
+            });
+        }
+        // </CHANGE>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Populate entries array from the server-side data
+            {% if data %}
+                entries = {{ data | tojson }};
+                // Build entries data map
+                entries.forEach(entry => {
+                    entriesData[entry.id] = {
+                        isFavorite: entry.is_favorite || false,
+                        strength: ''
+                    };
+                });
+                loadAllPasswordStrengths().then(() => {
+                    markDuplicatePasswords();
+
+                    // Check if there's a filter parameter in the URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const filter = urlParams.get('filter');
+
+                    if (filter && ['weak', 'breached', 'duplicates'].includes(filter)) {
+                        console.log('[v0] Applying URL filter:', filter);
+                        // Apply the filter
+                        applyFilter(filter);
+                        // Show the info banner
+                        showSecurityFilterBanner(filter);
+                        // Auto-select the first filtered entry
+                        setTimeout(() => {
+                            autoSelectFirstFilteredEntry();
+                        }, 100);
+                    }
+                });
+            {% endif %}
+
+            updatePasswordCount();
+
+            // Check password strength immediately when a password is selected
+            if (selected_entry && selected_entry.password) {
+                windowSelectedEntryPassword = selected_entry.password; // Store password for copy functionality
+                checkViewPasswordStrength();
+            }
+            applyTheme(); // Apply theme on load
+        });
+
+        function autoSelectFirstFilteredEntry() {
+            console.log('[v0] Auto-selecting first filtered entry');
+            const visibleEntries = document.querySelectorAll('.entry-row:not([style*="display: none"])');
+            console.log('[v0] Found visible entries:', visibleEntries.length);
+
+            if (visibleEntries.length > 0) {
+                const firstEntry = visibleEntries[0];
+                const entryId = firstEntry.getAttribute('data-id');
+                console.log('[v0] Selecting first entry with ID:', entryId);
+
+                // Click on the first entry to load its details
+                if (entryId) {
+                    selectEntry(parseInt(entryId));
+                }
+            }
+        }
+
+        function markDuplicatePasswords() {
+            const passwordCounts = {};
+
+            // Count occurrences of each password
+            entries.forEach(entry => {
+                const pwd = entry.password;
+                if (pwd) {
+                    passwordCounts[pwd] = (passwordCounts[pwd] || 0) + 1;
+                }
+            });
+
+            // Mark entries with duplicate passwords
+            entries.forEach(entry => {
+                if (entry.password && passwordCounts[entry.password] > 1) {
+                    const entryRow = document.querySelector(`[data-id="${entry.id}"]`);
+                    if (entryRow) {
+                        entryRow.dataset.duplicate = 'true';
+                        console.log('[v0] Marked entry', entry.id, 'as duplicate');
+                    }
+                }
+            });
+        }
+
+        function t(key) {
+            return translations[key] || key;
+        }
+
+        // Function to toggle password visibility, now correctly referencing the image element
+        function togglePasswordVisibility(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            // </CHANGE>
+            const passwordTextElement = document.getElementById('password-text');
+            const strengthContainer = document.getElementById('view-password-strength');
+            const eyeToggleIcon = document.getElementById('eye-toggle-icon');
+
+            if (!passwordTextElement) return;
+
+            passwordVisible = !passwordVisible;
+
+            if (passwordVisible) {
+                const currentEntry = entries.find(e => e.id === selected_entry.id);
+                if (currentEntry && currentEntry.password) {
+                    passwordTextElement.textContent = currentEntry.password;
+                } else {
+                    passwordTextElement.textContent = 'Error showing password';
+                }
+                if (eyeToggleIcon) eyeToggleIcon.src = '/static/images/eyeopen.png';
+                checkViewPasswordStrength();
+            } else {
+                // Set to a reasonable number of dots, or a fixed length to avoid layout shifts
+                passwordTextElement.textContent = '••••••••'.substring(0, (selected_entry && selected_entry.password ? selected_entry.password.length : 8));
+                if (eyeToggleIcon) eyeToggleIcon.src = '/static/images/eyeclose.png';
+            }
+        }
+
+
+        async function checkViewPasswordStrength() {
+            const detailPanel = document.getElementById('detail-panel');
+            const passwordTextElement = document.getElementById('password-text');
+            if (!passwordTextElement || !detailPanel.contains(passwordTextElement)) {
+                return;
+            }
+
+            const strengthContainer = document.getElementById('view-password-strength');
+            const strengthIcon = document.getElementById('view-strength-icon');
+            const strengthText = document.getElementById('view-strength-text');
+
+            if (!strengthContainer || !strengthIcon || !strengthText) return;
+
+            const currentPasswordValue = windowSelectedEntryPassword;
+
+            if (!currentPasswordValue || currentPasswordValue === '••••••••' || currentPasswordValue === 'Error showing password') {
+                strengthContainer.classList.add('hidden');
+                return;
+            }
+
+            if (allPasswordStrengths[currentPasswordValue]) {
+                updateStrengthDisplayView(strengthContainer, strengthIcon, strengthText, allPasswordStrengths[currentPasswordValue]);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/check-password-strength', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ password: currentPasswordValue })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const strength = data.strength;
+                    allPasswordStrengths[currentPasswordValue] = strength;
+                    updateStrengthDisplayView(strengthContainer, strengthIcon, strengthText, strength);
+                } else {
+                    console.error('Failed to check password strength, status:', response.status);
+                    strengthContainer.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error checking password strength:', error);
+                strengthContainer.classList.add('hidden');
+            }
+        }
+
+        function updateStrengthDisplayView(container, icon, text, strength) {
+            container.style.display = 'flex';
+            container.classList.remove('hidden');
+
+            if (strength === 'strong') {
+                // Use shield icon for strong passwords
+                icon.innerHTML = '<image href="/static/images/strong.png" width="20" height="20"/>';
+                icon.className = 'w-5 h-5';
+                text.textContent = 'Strong';
+                text.className = 'text-xs font-semibold whitespace-nowrap text-green-500';
+            } else if (strength === 'weak') {
+                // Use shield icon with yellow tint for weak passwords
+                icon.innerHTML = '<image href="/static/images/weak.png" width="20" height="20" style="filter: brightness(0) saturate(100%) invert(85%) sepia(69%) saturate(583%) hue-rotate(359deg) brightness(104%) contrast(104%);"/>';
+                icon.className = 'w-5 h-5';
+                text.textContent = 'Weak';
+                text.className = 'text-xs font-semibold whitespace-nowrap text-yellow-500';
+            } else if (strength === 'breached') {
+                // Use breached icon for breached passwords
+                icon.innerHTML = '<image href="/static/images/breached.png" width="20" height="20"/>';
+                icon.className = 'w-5 h-5';
+                text.textContent = 'Breached';
+                text.className = 'text-xs font-semibold whitespace-nowrap text-red-500';
+            }
+        }
+
+        function selectEntry(id, event) {
+            if (event && (event.target.closest('.checkbox-entry') || event.target.closest('.favorite-btn'))) {
+                return;
+            }
+
+            document.querySelectorAll('.entry-row').forEach(row => {
+                row.classList.remove('selected');
+            });
+            const clickedRow = document.querySelector(`[data-id="${id}"]`);
+            if (clickedRow) {
+                clickedRow.classList.add('selected');
+            }
+
+            const detailPanel = document.getElementById('detail-panel');
+
+            fetch(`/api/entry/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(entry => {
+                    window.selectedEntryData = entry;
+
+                    detailPanel.innerHTML = `<div class="space-y-5">
+    <!-- Category -->
+    <div class="info-card flex items-start px-4 py-3">
+        <span class="flex justify-center items-center shrink-0 pr-4 mt-2" style="color: var(--muted-foreground);">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+        </span>
+        <div class="w-full min-w-0">
+            <div class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Category</div>
+            <div class="text-white text-sm font-medium mt-1">${entry.category || 'Uncategorized'}</div>
+        </div>
+    </div>
+
+    <!-- URL -->
+    <div class="info-card flex items-start px-4 py-3">
+        <span class="flex justify-center items-center shrink-0 pr-4 mt-2" style="color: var(--muted-foreground);">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+            </svg>
+        </span>
+        <div class="w-full min-w-0">
+            <div class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Website URL</div>
+            <div class="text-white text-sm font-medium mt-1 break-all">${entry.url || 'No URL'}</div>
+        </div>
+    </div>
+
+    <!-- Username -->
+    <div class="info-card flex items-start px-4 py-3">
+        <span class="flex justify-center items-center shrink-0 pr-4 mt-2" style="color: var(--muted-foreground);">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+        </span>
+        <div class="w-full min-w-0">
+            <div class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Username</div>
+            <div class="text-white text-sm font-medium mt-1 select-none break-all">${entry.username || 'No username'}</div>
+        </div>
+    </div>
+
+    <!-- Password -->
+    <div class="info-card flex items-start px-4 py-3">
+        <span class="flex justify-center items-center shrink-0 pr-4 mt-2" style="color: var(--muted-foreground);">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+        </span>
+        <div class="w-full min-w-0">
+            <div class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Password</div>
+            <div id="password-text"
+                class="text-white text-sm font-medium mt-1 cursor-pointer select-none break-all font-mono"
+                onclick="handlePasswordClick()">••••••••</div>
+        </div>
+        <span class="shrink-0 ml-3 flex flex-row-reverse items-center gap-2">
+            <button class="p-2 hover:bg-gray-600/50 rounded-lg transition-colors"
+                onclick="togglePasswordVisibility(event)"
+                title="Toggle password visibility">
+                <img id="eye-toggle-icon" src="/static/images/eyeclose.png" alt="Toggle password visibility"
+                    class="w-7 h-7">
+            </button>
+            <div id="view-password-strength"
+                class="flex items-center gap-2 hidden origin-left"
+                style="transform: scale(1.3) translateX(-25px); transform-origin: left;">
+                <svg id="view-strength-icon" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5"></svg>
+                <span id="view-strength-text"
+                    class="text-xs font-semibold whitespace-nowrap"></span>
+            </div>
+        </span>
+    </div>
+
+    <!-- Last Modified -->
+    <div class="info-card flex items-start px-4 py-3">
+        <span class="flex justify-center items-center shrink-0 pr-4 mt-2" style="color: var(--muted-foreground);">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+        </span>
+        <div class="w-full min-w-0">
+            <div class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Last Modified</div>
+            <div class="text-gray-400 text-sm font-medium mt-1">${entry.last_modified || 'N/A'}</div>
+        </div>
+    </div>
+
+    <!-- Created -->
+    <div class="info-card flex items-start px-4 py-3">
+        <span class="flex justify-center items-center shrink-0 pr-4 mt-2" style="color: var(--muted-foreground);">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </span>
+        <div class="w-full min-w-0">
+            <div class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Created</div>
+            <div class="text-gray-400 text-sm font-medium mt-1">${entry.first_created || 'N/A'}</div>
+        </div>
+    </div>
+</div>
+
+                    `;
+                    selected_entry = entry;
+                    windowSelectedEntryPassword = entry.password;
+
+                    setTimeout(() => {
+                        checkViewPasswordStrength();
+                    }, 100);
+                })
+                .catch(error => {
+                    console.error('Error loading entry:', error);
+                    document.getElementById('detail-panel').innerHTML = `
+                        <div class="text-red-400 p-4">Error loading entry: ${error.message}</div>
+                    `;
+                });
+        }
+
+        function closeDetailPanel() {
+            document.getElementById('detail-panel').innerHTML = `
+                <div class="text-center py-16">
+                    <svg class="w-14 h-14 mx-auto text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                    <p class="text-gray-400 font-medium text-sm">Select an entry to view details</p>
+                </div>
+            `;
+            document.querySelectorAll('.entry-row').forEach(row => {
+                row.classList.remove('selected');
+            });
+            selected_entry = null;
+            windowSelectedEntryPassword = null;
+        }
+
+
+        function toggleFilterDropdown() {
+            const dropdown = document.getElementById('filter-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('filter-dropdown');
+            const filterButton = event.target.closest('button[onclick="toggleFilterDropdown()"]');
+
+            if (!filterButton && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        function showNoResultsMessage() {
+            const msg = document.createElement('div');
+            msg.id = 'noResultsMessage';
+            msg.className = 'text-center py-8 text-gray-400';
+            msg.innerHTML = `
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <p class="text-lg">${t('noPasswordsFound')}</p>
+            `;
+            document.querySelector('#password-list').appendChild(msg);
+        }
+
+        function removeNoResultsMessage() {
+            const msg = document.getElementById('noResultsMessage');
+            if (msg) {
+                msg.remove();
+            }
+        }
+
+        function updatePasswordCount() {
+            const entries = document.querySelectorAll('#password-list .entry-row');
+            const visibleCount = Array.from(entries).filter(e => e.style.display !== 'none').length;
+            const countElement = document.getElementById('password-count');
+            if (countElement) {
+                countElement.textContent = visibleCount;
+            }
+        }
+
+        function calculateAllPasswordStrengths() {
+            const entries = document.querySelectorAll('#password-list .entry-row');
+            entries.forEach(entry => {
+                const id = entry.dataset.id;
+                allPasswordStrengths[id] = 'checking';
+            });
+        }
+
+        function filterByCategory(category) {
+            const entries = document.querySelectorAll('#password-list .entry-row');
+            let anyVisible = false;
+            entries.forEach(entry => {
+                const entryCategory = entry.dataset.category || 'uncategorized';
+                if (category === 'all' || entryCategory === category.toLowerCase()) {
+                    entry.style.display = 'flex';
+                    anyVisible = true;
+                } else {
+                    entry.style.display = 'none';
+                }
+            });
+            updatePasswordCount();
+            if (!anyVisible) {
+                showNoResultsMessage();
+            } else {
+                removeNoResultsMessage();
+            }
+            document.getElementById('filter-dropdown').classList.add('hidden');
+        }
+
+        function applyFilter(filterType) {
+            currentFilter = filterType;
+            const entries = document.querySelectorAll('#password-list .entry-row');
+            const searchInput = document.getElementById('search-input');
+            const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            let visibleCount = 0;
+            let anyVisible = false;
+
+            entries.forEach(entry => {
+                const entryCategory = entry.dataset.category || 'uncategorized';
+                const isFavorite = entry.dataset.isFavorite === 'true';
+                const strength = entry.dataset.strength || '';
+                const isDuplicate = entry.dataset.duplicate === 'true';
+
+                const title = entry.dataset.title || '';
+                const username = entry.dataset.username || '';
+                const category = entry.dataset.category || '';
+                const searchText = `${title} ${username} ${category}`.toLowerCase();
+                const queryWords = searchQuery.split(' ').filter(word => word.length > 0);
+
+                let matchesSearch = true;
+                if (searchQuery) {
+                    matchesSearch = queryWords.every(word => searchText.includes(word));
+                }
+
+                let showEntry = false;
+
+                if (filterType === 'all') {
+                    showEntry = matchesSearch;
+                } else if (filterType === 'favorites') {
+                    showEntry = isFavorite && matchesSearch;
+                } else if (filterType === 'weak') {
+                    showEntry = strength === 'weak' && matchesSearch;
+                } else if (filterType === 'breached') {
+                    showEntry = strength === 'breached' && matchesSearch;
+                } else if (filterType === 'duplicates') {
+                    showEntry = isDuplicate && matchesSearch;
+                } else if (filterType === 'recent') {
+                    showEntry = matchesSearch;
+                }
+
+                if (showEntry) {
+                    entry.style.display = 'flex';
+                    visibleCount++;
+                    anyVisible = true;
+                } else {
+                    entry.style.display = 'none';
+                }
+            });
+
+            updatePasswordCount();
+            if (!anyVisible && filterType !== 'all') {
+                showNoResultsMessage();
+            } else {
+                removeNoResultsMessage();
+            }
+            document.getElementById('filter-dropdown').classList.add('hidden');
+        }
+
+        function updatePasswordLength() {
+            const slider = document.getElementById('password-length');
+            document.getElementById('length-value').textContent = slider.value;
+            generateLivePassword();
+        }
+
+
+        function openPasswordGenerator(targetInputId) {
+            targetPasswordInput = targetInputId;
+            const panel = document.getElementById('password-gen-panel');
+            panel.style.right = '0';
+            generateLivePassword();
+        }
+
+
+        function generateLivePassword() {
+            const length = document.getElementById('password-length').value;
+            const includeUpper = document.getElementById('include-uppercase').checked;
+            const includeLower = document.getElementById('include-lowercase').checked;
+            const includeNumbers = document.getElementById('include-numbers').checked;
+            const includeSymbols = document.getElementById('include-symbols').checked;
+
+            let charset = '';
+            if (includeUpper) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if (includeLower) charset += 'abcdefghijklmnopqrstuvwxyz';
+            if (includeNumbers) charset += '0123456789';
+            if (includeSymbols) charset += '!@#$%^&*()_+-=[]{};\':\",./<>?\\|`~';
+
+            if (!charset) {
+                charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            }
+
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                password += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+
+            document.getElementById('generated-password').textContent = password;
+        }
+
+        function useGeneratedPassword() {
+            const password = document.getElementById('generated-password').textContent;
+            if (targetPasswordInput) {
+                const inputElement = document.getElementById(targetPasswordInput);
+                inputElement.value = password;
+
+                if (targetPasswordInput === 'add-password') {
+                    checkPasswordStrength('add');
+                } else if (targetPasswordInput === 'edit-password') {
+                    checkPasswordStrength('edit');
+                }
+            }
+            closePasswordGenerator();
+        }
+
+        function toggleCreateDropdown() {
+            const dropdown = document.getElementById('create-dropdown');
+            dropdown.classList.toggle('hidden');
+
+            // Close dropdown when clicking outside
+            if (!dropdown.classList.contains('hidden')) {
+                setTimeout(() => {
+                    document.addEventListener('click', function closeDropdown(e) {
+                        const button = document.getElementById('create-item-btn');
+                        if (!dropdown.contains(e.target) && !button.contains(e.target)) {
+                            dropdown.classList.add('hidden');
+                            document.removeEventListener('click', closeDropdown);
+                        }
+                    });
+                }, 0);
+            }
+        }
+
+        function openAddPanel(type) {
+            const dropdown = document.getElementById('create-dropdown');
+            dropdown.classList.add('hidden');
+
+            if (type === 'login') {
+                // Open add panel with password form (default behavior)
+                toggleAddPanel();
+                switchAddTab('password');
+            } else if (type === 'passkey') {
+                // Open add panel with passkey form
+                toggleAddPanel();
+                switchAddTab('passkey');
+            } else if (type === 'password') {
+                // Open password generator directly
+                openPasswordGenerator('add-password');
+            } else if (type === 'card' || type === 'identity' || type === 'crypto' || type === 'note') {
+                // These are coming soon, show a message
+                console.log('[v0] Feature coming soon:', type);
+            }
+        }
+
+        function closePasswordGenerator() {
+            const panel = document.getElementById('password-gen-panel');
+            panel.style.right = '-900px';
+            targetPasswordInput = null;
+        }
+
+        function closeAddPanel() {
+            document.getElementById('add-panel').style.right = '-900px';
+        }
+
+        function toggleEditPanel(id) {
+            const editPanel = document.getElementById('edit-panel');
+            const addPanel = document.getElementById('add-panel');
+            const genPanel = document.getElementById('password-gen-panel');
+
+            addPanel.style.right = '-900px';
+            genPanel.style.right = '-900px';
+
+            if (editPanel.style.right === '0px') {
+                editPanel.style.right = '-900px';
+            } else {
+                editPanel.style.right = '0';
+            }
+
+            if (selected_entry && selected_entry.id === id) {
+                document.getElementById('edit-title').value = selected_entry.title || '';
+                document.getElementById('edit-username').value = selected_entry.username || '';
+                document.getElementById('edit-password').value = selected_entry.password || '';
+                document.getElementById('edit-url').value = selected_entry.url || '';
+                document.getElementById('edit-totp').value = selected_entry.totp_secret || '';
+                document.getElementById('edit-category').value = selected_entry.category || 'Uncategorized';
+
+                if (!['Uncategorized', 'Personal', 'Work', 'Banking', 'Social Media', 'Shopping', 'Entertainment', 'Other'].includes(selected_entry.category)) {
+                    document.getElementById('edit-category').value = '__custom__';
+                    document.getElementById('edit-category-custom').classList.remove('hidden');
+                    document.getElementById('edit-category-custom').value = selected_entry.category;
+                } else {
+                    document.getElementById('edit-category-custom').classList.add('hidden');
+                }
+
+                checkPasswordStrength('edit');
+            } else if (id) {
+                fetch(`/api/entry/${id}`)
+                    .then(response => response.json())
+                    .then(entry => {
+                        selected_entry = entry;
+                        document.getElementById('edit-title').value = entry.title || '';
+                        document.getElementById('edit-username').value = entry.username || '';
+                        document.getElementById('edit-password').value = entry.password || '';
+                        document.getElementById('edit-url').value = entry.url || '';
+                        document.getElementById('edit-totp').value = entry.totp_secret || '';
+                        document.getElementById('edit-category').value = entry.category || 'Uncategorized';
+
+                        if (!['Uncategorized', 'Personal', 'Work', 'Banking', 'Social Media', 'Shopping', 'Entertainment', 'Other'].includes(entry.category)) {
+                            document.getElementById('edit-category').value = '__custom__';
+                            document.getElementById('edit-category-custom').classList.remove('hidden');
+                            document.getElementById('edit-category-custom').value = entry.category;
+                        } else {
+                            document.getElementById('edit-category-custom').classList.add('hidden');
+                        }
+                        checkPasswordStrength('edit');
+                    })
+                    .catch(error => console.error('Error fetching entry for edit:', error));
+            }
+        }
+
+        function closeEditPanel() {
+            document.getElementById('edit-panel').style.right = '-900px';
+        }
+
+        async function submitAddForm() {
+            const title = document.getElementById('add-title').value.trim();
+            const url = document.getElementById('add-url').value.trim();
+            const username = document.getElementById('add-username').value.trim();
+            const password = document.getElementById('add-password').value.trim();
+            const totp = document.getElementById('add-totp').value.trim();
+
+            let category = document.getElementById('add-category').value;
+            if (category === '__custom__') {
+                category = document.getElementById('add-category-custom').value.trim();
+                if (!category) {
+                    alert(t('enterCategoryName'));
+                    return;
+                }
+            }
+
+            if (!username || !password) {
+                document.getElementById('add-error').textContent = 'Username and password are required.';
+                document.getElementById('add-error').classList.remove('hidden');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('_csrf_token', csrfToken);
+            formData.append('title', title);
+            formData.append('url', url);
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('totp_secret', totp);
+            formData.append('category', category);
+
+            try {
+                const response = await fetch('/dashboard/add/', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const errorData = await response.json();
+                    document.getElementById('add-error').textContent = errorData.error || 'Failed to add entry.';
+                    document.getElementById('add-error').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('add-error').textContent = 'Network error. Please try again.';
+                document.getElementById('add-error').classList.remove('hidden');
+            }
+        }
+
+        async function submitEditForm() {
+            if (!selected_entry) return;
+
+            const title = document.getElementById('edit-title').value.trim();
+            const url = document.getElementById('edit-url').value.trim();
+            const username = document.getElementById('edit-username').value.trim();
+            const password = document.getElementById('edit-password').value.trim();
+            const totp = document.getElementById('edit-totp').value.trim();
+
+            let category = document.getElementById('edit-category').value;
+            if (category === '__custom__') {
+                category = document.getElementById('edit-category-custom').value.trim();
+                if (!category) {
+                    alert(t('enterCategoryName'));
+                    return;
+                }
+            }
+
+            if (!username || !password) {
+                document.getElementById('edit-error').textContent = 'Username and password are required.';
+                document.getElementById('edit-error').classList.remove('hidden');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('_csrf_token', csrfToken);
+            formData.append('title', title);
+            formData.append('url', url);
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('totp_secret', totp);
+            formData.append('category', category);
+
+            try {
+                const response = await fetch(`/dashboard/edit/${selected_entry.id}/`, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const errorData = await response.json();
+                    document.getElementById('edit-error').textContent = errorData.error || 'Failed to update entry.';
+                    document.getElementById('edit-error').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('edit-error').textContent = 'Network error. Please try again.';
+                document.getElementById('edit-error').classList.remove('hidden');
+            }
+        }
+
+        function handleCategoryChange(context) {
+            const select = document.getElementById(`${context}-category`);
+            const customInput = document.getElementById(`${context}-category-custom`);
+
+            if (select.value === '__custom__') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+                customInput.value = '';
+            }
+        }
+
+        function handleEntryClick(event, id) {
+            // Don't trigger if clicking on favorite button or checkbox
+            if (event.target.closest('.favorite-btn') || event.target.closest('.checkbox-entry')) {
+                return;
+            }
+
+            if (isSelectionMode) {
+                // In selection mode, clicking the row toggles the checkbox
+                const checkbox = event.currentTarget.querySelector('.checkbox-entry');
+                checkbox.checked = !checkbox.checked;
+
+                // Manually trigger the selection toggle
+                if (checkbox.checked) {
+                    selectedEntries.add(id);
+                } else {
+                    selectedEntries.delete(id);
+                }
+
+                updateBulkActionsBar();
+            } else {
+                // Normal mode - open the entry details
+                selectEntry(id, event);
+            }
+        }
+
+        function toggleEntrySelection(event, id) {
+            event.stopPropagation();
+
+            const checkbox = event.target;
+            if (checkbox.checked) {
+                selectedEntries.add(id);
+            } else {
+                selectedEntries.delete(id);
+            }
+
+            updateBulkActionsBar();
+        }
+
+        function updateBulkActionsBar() {
+            const bulkBar = document.getElementById('bulk-actions-bar');
+            const selectedCount = document.getElementById('selected-count');
+
+            if (selectedEntries.size > 0) {
+                bulkBar.classList.add('show');
+                selectedCount.textContent = `${selectedEntries.size} ${selectedEntries.size === 1 ? t('itemSelected') : t('itemsSelected')}`;
+
+                document.querySelectorAll('.entry-row').forEach(entry => {
+                    const entryId = parseInt(entry.dataset.id);
+                    const checkbox = entry.querySelector('.checkbox-entry');
+
+                    if (selectedEntries.has(entryId)) {
+                        entry.classList.add('selected-bulk');
+                        if (checkbox) checkbox.checked = true;
+                    } else {
+                        entry.classList.remove('selected-bulk');
+                        if (checkbox) checkbox.checked = false;
+                    }
+                });
+            } else {
+                bulkBar.classList.remove('show');
+
+                document.querySelectorAll('.entry-row').forEach(entry => {
+                    entry.classList.remove('selected-bulk');
+                    const checkbox = entry.querySelector('.checkbox-entry');
+                    if (checkbox) checkbox.checked = false;
+                });
+            }
+        }
+
+        function clearSelection() {
+            selectedEntries.clear();
+            updateBulkActionsBar();
+
+            // Exit selection mode when canceling
+            if (isSelectionMode) {
+                toggleSelectionMode();
+            }
+        }
+
+        function toggleSelectionMode() {
+            const passwordListContainer = document.getElementById('password-list-container');
+            const selectionBtn = document.getElementById('selection-mode-btn');
+            const checkboxes = document.querySelectorAll('.checkbox-entry');
+
+            isSelectionMode = !isSelectionMode;
+
+            if (isSelectionMode) {
+                // Enable selection mode
+                passwordListContainer.classList.add('selection-mode');
+                checkboxes.forEach(cb => cb.classList.remove('hidden'));
+                selectionBtn.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    <span data-translate="cancel">Cancel</span>
+                `;
+                selectionBtn.classList.remove('from-[#007BA7]', 'to-[#0096C7]');
+                selectionBtn.classList.add('bg-gray-700');
+            } else {
+                // Disable selection mode
+                passwordListContainer.classList.remove('selection-mode');
+                checkboxes.forEach(cb => {
+                    cb.classList.add('hidden');
+                    cb.checked = false;
+                });
+                selectionBtn.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span data-translate="select">Select</span>
+                `;
+                selectionBtn.classList.add('from-[#2563eb]', 'to-[#3b82f6]');
+                selectionBtn.classList.remove('bg-gray-700');
+                clearSelection();
+            }
+        }
+
+        // Function to delete an entry (called from detail panel)
+        function deleteEntry(id) {
+            // Replaced direct confirm with showModal
+            showModal(
+                'Move to Bin',
+                'Are you sure you want to delete this entry? It will be moved to the trash.',
+                async () => {
+                    const csrfToken = document.querySelector('input[name="_csrf_token"]')?.value || '';
+
+                    try {
+                        const response = await fetch(`/delete/${id}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({ _csrf_token: csrfToken })
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            // Display error using showModal
+                            const errorData = await response.json();
+                            showModal('Error', errorData.error || 'Failed to delete entry. Please try again.', null);
+                        }
+                    } catch (error) {
+                        console.error('Error deleting entry:', error);
+                        showModal('Error', 'Network error. Please try again.', null);
+                    }
+                }
+            );
+        }
+
+        // Function to toggle favorite status
+        function toggleFavorite(event, id) {
+            event.stopPropagation();
+
+            const svgElement = event.target.closest('.favorite-btn').querySelector('svg');
+            const isFavorite = svgElement.classList.contains('fill-current');
+
+            fetch(`/dashboard/toggle-favorite/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                credentials: 'include',
+                body: JSON.stringify({ is_favorite: !isFavorite })
+            })
+            .then(response => {
+                if (response.ok) {
+                    if (isFavorite) {
+                        svgElement.classList.remove('fill-current', 'text-yellow-400');
+                        svgElement.classList.add('text-gray-500');
+                        svgElement.style.fill = 'none';
+                    } else {
+                        svgElement.classList.add('fill-current', 'text-yellow-400');
+                        svgElement.classList.remove('text-gray-500');
+                        svgElement.style.fill = 'currentColor';
+                    }
+
+                    const entryRow = event.target.closest('.entry-row');
+                    if (entryRow) {
+                        entryRow.dataset.isFavorite = !isFavorite ? 'true' : 'false';
+                    }
+
+                    if (entriesData[id]) {
+                        entriesData[id].isFavorite = !isFavorite;
+                    }
+
+                    if (selected_entry && selected_entry.id === id) {
+                        selected_entry.is_favorite = !isFavorite;
+                    }
+
+                    const favButton = event.target.closest('.favorite-btn');
+                    if (favButton) {
+                        favButton.title = isFavorite ? t('addToFavorites') : t('removeFromFavorites');
+                    }
+
+                    sortPasswordList();
+                } else {
+                    alert('Failed to update favorite status.');
+                }
+            })
+            .catch(error => {
+                console.error('Error toggling favorite:', error);
+                alert('Network error. Please try again.');
+            });
+        }
+
+        function openEditPanel(id) {
+            toggleEditPanel(id);
+        }
+
+        async function loadAllPasswordStrengths() {
+            console.log('[v0] Loading all password strengths...');
+            for (const entry of entries) {
+                if (entry.password) {
+                    try {
+                        const response = await fetch('/api/check-password-strength', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({ password: entry.password })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            const strength = data.strength;
+
+                            if (entriesData[entry.id]) {
+                                entriesData[entry.id].strength = strength;
+                            }
+
+                            const entryElement = document.querySelector(`.entry-row[data-id="${entry.id}"]`);
+                            if (entryElement) {
+                                entryElement.dataset.strength = strength;
+                                console.log(`[v0] Entry ${entry.id} strength:`, strength);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error loading strength for entry:', entry.id, error);
+                    }
+                }
+            }
+
+            const passwordMap = {};
+            entries.forEach(entry => {
+                if (entry.password) {
+                    if (!passwordMap[entry.password]) {
+                        passwordMap[entry.password] = [];
+                    }
+                    passwordMap[entry.password].push(entry.id);
+                }
+            });
+
+            // Mark duplicates
+            Object.keys(passwordMap).forEach(password => {
+                if (passwordMap[password].length > 1) {
+                    passwordMap[password].forEach(id => {
+                        const entryRow = document.querySelector(`.entry-row[data-id="${id}"]`);
+                        if (entryRow) {
+                            entryRow.dataset.duplicate = 'true';
+                            console.log(`[v0] Entry ${id} marked as duplicate`);
+                        }
+                    });
+                }
+            });
+
+            console.log('[v0] Finished loading all password strengths');
+        }
+
+        function sortPasswordList() {
+            const passwordList = document.getElementById('password-list');
+            const entryRows = Array.from(passwordList.querySelectorAll('.entry-row'));
+
+            entryRows.sort((a, b) => {
+                const aFavorite = a.dataset.isFavorite === 'true';
+                const bFavorite = b.dataset.isFavorite === 'true';
+
+                if (aFavorite && !bFavorite) return -1;
+                if (!aFavorite && bFavorite) return 1;
+
+                const aTitle = a.dataset.title || '';
+                const bTitle = b.dataset.title || '';
+                return aTitle.localeCompare(bTitle);
+            });
+
+            entryRows.forEach(row => passwordList.appendChild(row));
+        }
+        // </CHANGE>
+
+        function copyToClipboard(text, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            if (!text) {
+                console.log("[v0] No text to copy");
+                return;
+            }
+
+            if (!navigator.clipboard) {
+                alert('Clipboard API not available');
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+                    z-index: 10000;
+                    font-size: 14px;
+                    font-weight: 500;
+                    animation: slideIn 0.3s ease-out;
+                `;
+                notification.textContent = `Copied to clipboard`;
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease-out';
+                    setTimeout(() => notification.remove(), 300);
+                }, 2000);
+
+                // Schedule clipboard clear if it's a password
+                if (event && event.target.closest('#password-button')) {
+                    scheduleClipboardClear();
+                }
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        function handlePasswordClick() {
+            // Always copy the password when clicking the field
+            if (windowSelectedEntryPassword) {
+                copyToClipboard(windowSelectedEntryPassword, event); // Pass event to stop propagation
+            }
+        }
+
+        function showBigView(value, title) {
+            const titleElement = document.getElementById('big-view-title');
+            const textContainer = document.getElementById('big-view-content'); // Corrected ID
+            const modal = document.getElementById('big-view-modal');
+
+            if (!titleElement || !textContainer || !modal) return;
+
+            titleElement.textContent = title;
+            bigViewCurrentText = value || (title === 'Username' ? 'No username' : 'No password');
+
+            // Clear previous content and apply styling
+            textContainer.innerHTML = '';
+
+            // Dynamically create spans for colored characters
+            for (let i = 0; i < bigViewCurrentText.length; i++) {
+                const char = bigViewCurrentText[i];
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.style.fontSize = '4rem';
+                span.style.fontWeight = 'bold';
+                span.style.display = 'inline-block';
+                span.style.margin = '0 4px';
+
+                if (/[a-zA-Z]/.test(char)) {
+                    span.style.color = '#ffffff'; // White for letters
+                } else if (/[0-9]/.test(char)) {
+                    span.style.color = '#3b82f6'; // Blue for numbers
+                } else {
+                    span.style.color = '#f97316'; // Orange for symbols
+                }
+                textContainer.appendChild(span);
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+
+        function closeBigView() {
+            document.getElementById('big-view-modal').classList.add('hidden');
+            document.getElementById('big-view-modal').classList.remove('flex');
+            bigViewCurrentText = '';
+        }
+
+        // Close big view on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !document.getElementById('big-view-modal').classList.contains('hidden')) {
+                closeBigView();
+            }
+        });
+
+        function copyBigViewText() {
+            if (bigViewCurrentText) {
+                navigator.clipboard.writeText(bigViewCurrentText).then(() => {
+                    alert('Copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Failed to copy to clipboard');
+                });
+            }
+        }
+
+
+
+        // Placeholder for showSecurityFilterBanner function
+        function showSecurityFilterBanner(filter) {
+            const banner = document.getElementById('security-filter-banner');
+            const titleElement = document.getElementById('banner-title');
+            const messageElement = document.getElementById('banner-message');
+
+            if (!banner || !titleElement || !messageElement) return;
+
+            let title = '';
+            let message = '';
+
+            switch(filter) {
+                case 'weak':
+                    title = 'Weak Passwords Detected';
+                    message = 'These passwords are easy to guess and should be changed immediately.';
+                    break;
+                case 'breached':
+                    title = 'Breached Passwords Found';
+                    message = 'These passwords may have been compromised in data breaches. Update them on affected sites.';
+                    break;
+                case 'duplicates':
+                    title = 'Duplicate Passwords Found';
+                    message = 'Using the same password across multiple sites is a security risk. Consider unique passwords for each account.';
+                    break;
+                default:
+                    banner.classList.add('hidden');
+                    return;
+            }
+
+            titleElement.textContent = title;
+            messageElement.textContent = message;
+            banner.classList.remove('hidden');
+        }
+
+        // Placeholder for clearSecurityFilter function
+        function closeSecurityFilterBanner() {
+            const banner = document.getElementById('security-filter-banner');
+            if (banner) {
+                banner.classList.add('hidden');
+            }
+            // Don't reset the filter - keep the filtered view active
+        }
+
+        function clearSecurityFilter() {
+            // Hide banner
+            closeSecurityFilterBanner();
+            // Reset URL parameter
+            const url = new URL(window.location.href);
+            url.searchParams.delete('filter');
+            window.history.pushState({}, '', url);
+            // Reload to show all passwords
+            window.location.reload();
+        }
+
+        // </CHANGE> ADDED FUNCTIONS
+        function switchAddTab(tab) {
+            const passwordTab = document.getElementById('add-password-tab');
+            const passkeyTab = document.getElementById('add-passkey-tab');
+            const passwordForm = document.getElementById('add-password-form');
+            const passkeyForm = document.getElementById('add-passkey-form');
+
+            if (tab === 'password') {
+                // Show password form, hide passkey form
+                passwordForm.classList.remove('hidden');
+                passkeyForm.classList.add('hidden');
+
+                // Update tab styling
+                passwordTab.classList.add('text-white', 'border-blue-500');
+                passwordTab.classList.remove('text-gray-400', 'border-transparent');
+                passkeyTab.classList.add('text-gray-400', 'border-transparent');
+                passkeyTab.classList.remove('text-white', 'border-blue-500');
+            } else if (tab === 'passkey') {
+                // Show passkey form, hide password form
+                passwordForm.classList.add('hidden');
+                passkeyForm.classList.remove('hidden');
+
+                // Update tab styling
+                passkeyTab.classList.add('text-white', 'border-blue-500');
+                passkeyTab.classList.remove('text-gray-400', 'border-transparent');
+                passwordTab.classList.add('text-gray-400', 'border-transparent');
+                passwordTab.classList.remove('text-white', 'border-blue-500');
+            }
+        }
+
+        async function submitPasskeyForm() {
+            const title = document.getElementById('add-passkey-title').value.trim();
+            const url = document.getElementById('add-passkey-url').value.trim();
+            const username = document.getElementById('add-passkey-username').value.trim();
+            const credential = document.getElementById('add-passkey-credential').value.trim();
+            const category = document.getElementById('add-passkey-category').value;
+
+            // Validate required fields
+            if (!title) {
+                showModal('Error', 'Title is required', null);
+                return;
+            }
+
+            if (!credential) {
+                showModal('Error', 'Credential ID is required. Please create the passkey on the website first.', null);
+                return;
+            }
+
+            try {
+                console.log('[v0] Submitting passkey with data:', { title, url, username, credential, category });
+
+                const response = await fetch('/api/passkey/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        _csrf_token: csrfToken,
+                        title: title,
+                        url: url,
+                        username: username,
+                        credential_id: credential,
+                        public_key: '', // Empty for manual entry
+                        category: category
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    console.log('[v0] Passkey added successfully');
+                    showModal('Success', 'Passkey added successfully!', () => {
+                        window.location.reload();
+                    });
+                } else {
+                    console.error('[v0] Failed to add passkey:', data);
+                    showModal('Error', data.error || 'Failed to add passkey. Please try again.', null);
+                }
+            } catch (error) {
+                console.error('[v0] Error adding passkey:', error);
+                showModal('Error', 'Network error. Please try again.', null);
+            }
+        }
+
+        function toggleAddPanel() {
+            const addPanel = document.getElementById('add-panel');
+            const editPanel = document.getElementById('edit-panel');
+            const genPanel = document.getElementById('password-gen-panel');
+
+            editPanel.style.right = '-900px';
+            genPanel.style.right = '-900px';
+
+            if (addPanel.style.right === '0px') {
+                addPanel.style.right = '-900px';
+                // Reset forms and hide tabs
+                document.getElementById('add-password-form').classList.remove('hidden');
+                document.getElementById('add-passkey-form').classList.add('hidden');
+                document.getElementById('add-password-tab').classList.add('text-white', 'border-blue-500');
+                document.getElementById('add-password-tab').classList.remove('text-gray-400', 'border-transparent');
+                document.getElementById('add-passkey-tab').classList.add('text-gray-400', 'border-transparent');
+                document.getElementById('add-passkey-tab').classList.remove('text-white', 'border-blue-500');
+
+            } else {
+                addPanel.style.right = '0';
+            }
+        }
+        // </CHANGE>
+    </script>
+</body>
 </html>
-

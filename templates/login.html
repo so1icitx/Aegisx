@@ -1,9 +1,133 @@
-<html>
-	<body>
-		<h1>Before continuing enter a master password</h1>
-		<form method="post">
-			<input type="text" name="master_password">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisX — Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/spartan.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
+            color: #e2e8f0;
+        }
+        .login-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(16px);
+        }
+        .input-field {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(30, 41, 59, 0.9);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .login-button {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            transition: all 0.25s ease;
+        }
+        .login-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+        .logo-text {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="login-card p-8 rounded-2xl max-w-md w-full mx-4">
+        <div class="text-center mb-8">
+            <img src="{{ url_for('static', filename='/static/images/aegis.png') }}" alt="AegisX" class="w-14 h-14 mx-auto mb-4 opacity-90">
+            <h1 class="text-3xl font-bold logo-text mb-2">AegisX</h1>
+            <p class="text-slate-400 text-sm">Local Encryption. Absolute Privacy.</p>
+        </div>
+        {% if error %}
+        <div class="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p class="text-red-400 text-sm text-center">{{ error }}</p>
+        </div>
+        {% endif %}
+        <form method="POST" class="space-y-6" id="login-form">
+            <div>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Master Password</label>
+                <input type="password" name="master_password" id="master-password" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Enter your master password" required>
+            </div>
+            <!-- Added 2FA code input (hidden by default) -->
+            <div id="2fa-input-container" style="display: none;">
+                <label class="block text-sm font-medium text-slate-300 mb-2">2FA Code</label>
+                <input type="text" name="twofa_code" id="twofa-code" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Enter 6-digit code" maxlength="6">
+            </div>
+            <button type="submit" class="login-button w-full px-4 py-3 text-white font-medium rounded-lg">
+                Access Vault
+            </button>
+        </form>
+        <div class="mt-6 text-center">
+            <p class="text-slate-500 text-xs">Protected by Argon2 & AES Encryption</p>
+        </div>
+    </div>
+    <!-- Added 2FA check script -->
+    <script>
+        const form = document.getElementById('login-form');
+        const masterPasswordInput = document.getElementById('master-password');
+        const twofaContainer = document.getElementById('2fa-input-container');
+        const twofaInput = document.getElementById('twofa-code');
+        let twofaRequired = false;
 
-		</form>
-	</body>
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // First check if 2FA is enabled
+            if (!twofaRequired) {
+                try {
+                    const response = await fetch('/check-2fa', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            '_csrf_token': '{{ csrf_token }}',
+                            'master_password': masterPasswordInput.value
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.password_valid && data.twofa_enabled) {
+                        // Show 2FA input
+                        twofaRequired = true;
+                        twofaContainer.style.display = 'block';
+                        twofaInput.required = true;
+                        twofaInput.focus();
+                        return;
+                    } else if (data.password_valid && !data.twofa_enabled) {
+                        // No 2FA, submit form normally
+                        form.submit();
+                        return;
+                    } else {
+                        // Invalid password, submit to show error
+                        form.submit();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('[v0] Error checking 2FA:', error);
+                    form.submit();
+                }
+            } else {
+                // 2FA code entered, submit form
+                form.submit();
+            }
+        });
+    </script>
+</body>
 </html>

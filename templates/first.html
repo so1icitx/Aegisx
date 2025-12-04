@@ -1,9 +1,197 @@
-<html>
-	<body>
-		<h1>Please enter a secure masterpassword that you will need to type everytime you log in!</h1>
-		<form method="post">
-			<input type="text" name="master_password">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisX — Set Master Password</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='static/images/so1vault.png') }}">
+    <style>
+        body {
+            background: radial-gradient(circle at top left, #0f172a, #020617);
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+        .btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            transition: all 0.25s ease;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+        /* Added enhanced password strength indicator styles */
+        .strength-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .strength-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+        }
+        .strength-text {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        /* </CHANGE> */
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="card p-8 rounded-2xl max-w-md w-full mx-4 text-center">
+        <img src="{{ url_for('static', filename='/static/images/aegis.png') }}" alt="AegisX" class="w-14 h-14 mx-auto mb-4 opacity-90">
+        <h1 class="text-2xl font-bold mb-4">Forge Your Master Key</h1>
+        <p class="text-slate-400 text-sm mb-6">This key protects all your encrypted passwords locally. It cannot be recovered if lost.</p>
 
-		</form>
-	</body>
+        {% if error %}
+        <p class="text-red-500 mb-4 text-center">{{ error }}</p>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('first') }}">
+            <div>
+                <label class="block text-sm font-medium mb-2">Master Password</label>
+                <input type="password" name="master_password" id="master-password" class="w-full p-3 border border-slate-600 rounded-lg bg-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="updatePasswordStrength('master-password')">
+                
+                <!-- Enhanced password strength indicator with progress bar and detailed feedback -->
+                <div class="strength-bar">
+                    <div id="master-password-strength-bar" class="strength-fill" style="width: 0%; background: transparent;"></div>
+                </div>
+                <div id="master-password-strength" class="strength-text"></div>
+                
+                <!-- Added password requirements checklist -->
+                <div id="password-requirements" class="mt-4 text-left text-xs space-y-2 hidden">
+                    <p class="text-slate-400 font-semibold mb-2">Password Requirements:</p>
+                    <div id="req-length" class="flex items-center gap-2 text-slate-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <span>At least 8 characters</span>
+                    </div>
+                    <div id="req-upper" class="flex items-center gap-2 text-slate-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <span>Uppercase letter (A-Z)</span>
+                    </div>
+                    <div id="req-lower" class="flex items-center gap-2 text-slate-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <span>Lowercase letter (a-z)</span>
+                    </div>
+                    <div id="req-number" class="flex items-center gap-2 text-slate-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <span>Number (0-9)</span>
+                    </div>
+                    <div id="req-special" class="flex items-center gap-2 text-slate-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <span>Special character (!@#$%^&*)</span>
+                    </div>
+                </div>
+                <!-- </CHANGE> -->
+            </div>
+            <button type="submit" class="btn w-full py-3 text-white font-medium rounded-lg mt-6">Set Master Password</button>
+        </form>
+    </div>
+
+    <script>
+        function checkPasswordStrength(pw) {
+            let strength = 0;
+            const checks = {
+                length: pw.length >= 8,
+                length12: pw.length >= 12,
+                length16: pw.length >= 16,
+                upper: /[A-Z]/.test(pw),
+                lower: /[a-z]/.test(pw),
+                number: /[0-9]/.test(pw),
+                special: /[^A-Za-z0-9]/.test(pw)
+            };
+
+            const charTypes = [checks.upper, checks.lower, checks.number, checks.special].filter(Boolean).length;
+
+            // Strong: 12+ chars with all 4 types OR 16+ chars with 3+ types
+            if ((checks.length12 && charTypes >= 4) || (checks.length16 && charTypes >= 3)) {
+                return { level: 'Strong', score: 100, color: '#10b981', icon: 'check' };
+            }
+            // Vulnerable: 8-11 chars with 2-3 types OR 12+ chars with only 2 types
+            else if (checks.length && charTypes >= 2) {
+                return { level: 'Vulnerable', score: 60, color: '#f59e0b', icon: 'warning' };
+            }
+            // Weak: everything else
+            else {
+                return { level: 'Weak', score: 30, color: '#ef4444', icon: 'x' };
+            }
+        }
+
+        function updatePasswordStrength(id) {
+            const pw = document.getElementById(id).value;
+            const strengthBar = document.getElementById(id + '-strength-bar');
+            const strengthText = document.getElementById(id + '-strength');
+            const requirementsDiv = document.getElementById('password-requirements');
+
+            if (!pw) {
+                strengthBar.style.width = '0%';
+                strengthBar.style.background = 'transparent';
+                strengthText.innerHTML = '';
+                requirementsDiv.classList.add('hidden');
+                return;
+            }
+
+            // Show requirements checklist
+            requirementsDiv.classList.remove('hidden');
+
+            // Update requirements checklist
+            const checks = {
+                length: pw.length >= 8,
+                upper: /[A-Z]/.test(pw),
+                lower: /[a-z]/.test(pw),
+                number: /[0-9]/.test(pw),
+                special: /[^A-Za-z0-9]/.test(pw)
+            };
+
+            updateRequirement('req-length', checks.length);
+            updateRequirement('req-upper', checks.upper);
+            updateRequirement('req-lower', checks.lower);
+            updateRequirement('req-number', checks.number);
+            updateRequirement('req-special', checks.special);
+
+            // Get strength result
+            const result = checkPasswordStrength(pw);
+
+            // Update progress bar
+            strengthBar.style.width = result.score + '%';
+            strengthBar.style.background = result.color;
+
+            // Update strength text with icon
+            const iconSvg = result.icon === 'check' 
+                ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>'
+                : result.icon === 'warning'
+                ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
+                : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+
+            strengthText.innerHTML = `<span style="color: ${result.color}">${iconSvg}</span><span style="color: ${result.color}">Password Strength: ${result.level}</span>`;
+        }
+
+        function updateRequirement(id, met) {
+            const element = document.getElementById(id);
+            if (met) {
+                element.classList.remove('text-slate-500');
+                element.classList.add('text-green-500');
+                element.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>';
+            } else {
+                element.classList.remove('text-green-500');
+                element.classList.add('text-slate-500');
+                element.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+            }
+        }
+        // </CHANGE>
+    </script>
+</body>
 </html>

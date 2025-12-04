@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisX - Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Added animated gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 50%);
+            animation: rotate 30s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        /* </CHANGE> */
+
+        /* Enhanced left sidebar with glassmorphism */
+        .settings-sidebar {
+            background: rgba(6, 6, 10, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            z-index: 30;
+            overflow-y: auto;
+        }
+
+        .settings-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            margin: 6px 12px;
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .settings-nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .settings-nav-item:hover::before {
+            left: 100%;
+        }
+
+        .settings-nav-item:hover {
+            background: rgba(30, 58, 138, 0.15);
+            color: rgba(255, 255, 255, 0.9);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+        }
+
+        .settings-nav-item.active {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%);
+            color: #ffffff;
+            border-left: 3px solid #2563eb;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+        }
+
+        .settings-nav-item svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+        /* </CHANGE> */
+
+        /* Main content area with glassmorphism */
+        .settings-content {
+            margin-left: 280px;
+            padding: 40px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        .settings-panel {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        /* </CHANGE> */
+
+        /* Enhanced info cards */
+        .info-card {
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            border-color: rgba(37, 99, 235, 0.3);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.1);
+        }
+        /* </CHANGE> */
+
+        /* Enhanced input styling */
+        .settings-input {
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 400;
+            font-size: 14px;
+            padding: 12px 16px;
+        }
+
+        .settings-input:focus {
+            outline: none;
+            border-color: rgba(37, 99, 235, 0.6);
+            background: rgba(25, 25, 40, 0.8);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .settings-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        /* </CHANGE> */
+
+        /* Enhanced buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+        }
+        /* </CHANGE> */
+
+        /* Logo gradient */
+        .logo-text {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1e3a8a 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        /* </CHANGE> */
+
+        /* Success and error messages */
+        .success-message {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        /* </CHANGE> */
+
+        /* Section content visibility */
+        .settings-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* </CHANGE> */
+
+        /* Enhanced scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.3) 0%, rgba(59, 130, 246, 0.3) 100%);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.5) 0%, rgba(59, 130, 246, 0.5) 100%);
+        }
+        /* </CHANGE> */
+
+        /* Light theme support */
+        body.light-theme {
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
+            color: #1a1a1a;
+        }
+
+        body.light-theme::before {
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 50%);
+        }
+
+        body.light-theme .settings-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            border-right: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-theme .settings-nav-item {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        body.light-theme .settings-nav-item:hover {
+            background: rgba(37, 99, 235, 0.1);
+            color: rgba(0, 0, 0, 0.9);
+        }
+
+        body.light-theme .settings-nav-item.active {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+            color: #2563eb;
+        }
+
+        body.light-theme .info-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-theme .settings-input {
+            background: rgba(255, 255, 255, 0.8);
+            color: #1a1a1a;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-theme .settings-input:focus {
+            border-color: rgba(37, 99, 235, 0.6);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px auto;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-icon.info { background: rgba(37, 99, 235, 0.15); color: #3b82f6; }
+        .modal-icon.warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .modal-icon.success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .modal-icon.error { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-button {
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            flex: 1;
+            border: none;
+        }
+        .modal-button.confirm {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+        }
+        .modal-button.confirm:hover {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            transform: translateY(-2px);
+        }
+        .modal-button.cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .modal-button.cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        /* </CHANGE> */
+
+        /* Added custom dropdown styling */
+        select.settings-input {
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27rgba(255,255,255,0.5)%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        body.light-theme select.settings-input {
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27rgba(0,0,0,0.5)%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+        }
+        /* </CHANGE> */
+    </style>
+</head>
+<body>
+    <!-- Left Settings Sidebar -->
+    <div class="settings-sidebar">
+        <!-- Header -->
+        <div class="p-6 border-b border-white border-opacity-5">
+            <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                <span class="text-gray-400 text-sm font-medium">Back to Dashboard</span>
+            </a>
+            <h1 class="text-2xl font-bold logo-text mb-1">Settings</h1>
+            <p class="text-gray-500 text-xs font-medium">Manage your preferences</p>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="py-4">
+            <div class="settings-nav-item active" onclick="showSection('general')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                </svg>
+                <span>General</span>
+            </div>
+
+            <div class="settings-nav-item" onclick="showSection('security')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                <span>Security</span>
+            </div>
+
+            <div class="settings-nav-item" onclick="showSection('import')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <span>Import</span>
+            </div>
+
+            <div class="settings-nav-item" onclick="showSection('export')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3v-12"></path>
+                </svg>
+                <span>Export</span>
+            </div>
+
+            <div class="settings-nav-item" onclick="showSection('advanced')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.066z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span>Advanced</span>
+            </div>
+
+            <div class="settings-nav-item" onclick="showSection('support')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m-6.192 0l-3.536-3.536m-6.192 0l-3.536 3.536M12 2v4m0 12v4M2 12h4m12 0h4"></path>
+                </svg>
+                <span>Support</span>
+            </div>
+        </nav>
+    </div>
+    <!-- </CHANGE> -->
+
+    <!-- Main Content Area -->
+    <div class="settings-content">
+        <div class="settings-panel">
+            
+            <!-- General Section -->
+            <div id="general-section" class="settings-section active">
+                <h2 class="text-3xl font-bold text-white mb-2">General Settings</h2>
+                <p class="text-gray-400 text-sm mb-8">Customize your experience</p>
+
+                {% if preferences_saved %}
+                <div class="success-message mb-6">
+                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Preferences saved successfully!
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('save_preferences') }}" onsubmit="showSuccessModal(event, 'General Settings Saved', 'Your preferences have been updated successfully'); return true;">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                    <!-- Language Section -->
+                    <div class="info-card p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
+                            Language
+                        </h3>
+                        <p class="text-gray-400 text-sm mb-4">Choose your preferred language</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="info-card p-4 cursor-pointer hover:border-blue-500 transition-all flex items-center gap-3">
+                                <input type="radio" name="language" value="en" class="w-4 h-4 text-blue-500" {% if session.get('language', 'en') == 'en' %}checked{% endif %}>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-2xl">🇬🇧</span>
+                                        <span class="text-white font-medium text-sm">English</span>
+                                    </div>
+                                    <p class="text-gray-500 text-xs">English (US)</p>
+                                </div>
+                            </label>
+
+                            <label class="info-card p-4 cursor-pointer hover:border-blue-500 transition-all flex items-center gap-3">
+                                <input type="radio" name="language" value="bg" class="w-4 h-4 text-blue-500" {% if session.get('language', 'en') == 'bg' %}checked{% endif %}>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-2xl">🇧🇬</span>
+                                        <span class="text-white font-medium text-sm">Български</span>
+                                    </div>
+                                    <p class="text-gray-500 text-xs">Bulgarian</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Theme Section -->
+                    <div class="info-card p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                            Appearance
+                        </h3>
+                        <p class="text-gray-400 text-sm mb-4">Choose your theme preference</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <label class="info-card p-4 cursor-pointer hover:border-blue-500 transition-all">
+                                <input type="radio" name="theme" value="light" class="w-4 h-4 text-blue-500 mb-3" {% if session.get('theme', 'dark') == 'light' %}checked{% endif %}>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                    <span class="text-white font-medium text-sm">Light Mode</span>
+                                </div>
+                                <p class="text-gray-500 text-xs">Bright and clean</p>
+                            </label>
+
+                            <label class="info-card p-4 cursor-pointer hover:border-blue-500 transition-all">
+                                <input type="radio" name="theme" value="dark" class="w-4 h-4 text-blue-500 mb-3" {% if session.get('theme', 'dark') == 'dark' %}checked{% endif %}>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                                    <span class="text-white font-medium text-sm">Dark Mode</span>
+                                </div>
+                                <p class="text-gray-500 text-xs">Easy on the eyes</p>
+                            </label>
+
+                            <label class="info-card p-4 cursor-pointer hover:border-blue-500 transition-all">
+                                <input type="radio" name="theme" value="system" class="w-4 h-4 text-blue-500 mb-3" {% if session.get('theme', 'dark') == 'system' %}checked{% endif %}>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    <span class="text-white font-medium text-sm">System</span>
+                                </div>
+                                <p class="text-gray-500 text-xs">Match your device</p>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Auto-Lock Section -->
+                    <div class="info-card p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            Auto-Lock Timeout
+                        </h3>
+                        <p class="text-gray-400 text-sm mb-4">Automatically lock after inactivity</p>
+
+                        <select name="auto_lock_timeout" class="settings-input w-full md:w-1/2">
+                            <option value="60" {% if session.get('auto_lock_timeout', 300) == 60 %}selected{% endif %}>1 minute</option>
+                            <option value="300" {% if session.get('auto_lock_timeout', 300) == 300 %}selected{% endif %}>5 minutes</option>
+                            <option value="600" {% if session.get('auto_lock_timeout', 300) == 600 %}selected{% endif %}>10 minutes</option>
+                            <option value="900" {% if session.get('auto_lock_timeout', 300) == 900 %}selected{% endif %}>15 minutes</option>
+                            <option value="1800" {% if session.get('auto_lock_timeout', 300) == 1800 %}selected{% endif %}>30 minutes</option>
+                            <option value="3600" {% if session.get('auto_lock_timeout', 300) == 3600 %}selected{% endif %}>1 hour</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary w-full px-6 py-3 text-white">Save General Settings</button>
+                </form>
+            </div>
+
+            <!-- Security Section -->
+            <div id="security-section" class="settings-section">
+                <h2 class="text-3xl font-bold text-white mb-2">Security Settings</h2>
+                <p class="text-gray-400 text-sm mb-8">Manage your account security</p>
+
+                {% if twofa_success %}
+                <div class="success-message mb-6">
+                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    {{ twofa_success }}
+                </div>
+                {% endif %}
+
+                {% if twofa_error %}
+                <div class="error-message mb-6">
+                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    {{ twofa_error }}
+                </div>
+                {% endif %}
+
+                <!-- 2FA Section -->
+                <div class="info-card p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        Two-Factor Authentication
+                    </h3>
+                    <p class="text-gray-400 text-sm mb-4">Add an extra layer of security to your account</p>
+
+                    <div id="2fa-status-container">
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                            <span class="text-gray-400">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Section -->
+            <div id="import-section" class="settings-section">
+                <h2 class="text-3xl font-bold text-white mb-2">Import Data</h2>
+                <p class="text-gray-400 text-sm mb-8">Select your password manager to import data</p>
+
+                {% if import_success %}
+                <div class="success-message mb-6">
+                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Successfully imported {{ import_count }} password(s)!
+                </div>
+                {% endif %}
+
+                {% if import_error %}
+                <div class="error-message mb-6">
+                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    {{ import_error }}
+                </div>
+                {% endif %}
+
+                <!-- Added password manager grid with icons -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <!-- 1Password -->
+                    <div class="info-card p-6 text-center cursor-pointer hover:border-blue-500 transition-all" onclick="selectPasswordManager('1password')">
+                        <img src="/static/images/1password.jpg" alt="1Password" class="w-16 h-16 mx-auto mb-3 rounded-xl object-contain">
+                        <p class="text-white font-semibold text-sm mb-1">1Password</p>
+                        <p class="text-gray-500 text-xs">CSV</p>
+                    </div>
+
+                    <!-- LastPass -->
+                    <div class="info-card p-6 text-center cursor-pointer hover:border-blue-500 transition-all" onclick="selectPasswordManager('lastpass')">
+                        <img src="/static/images/lastpass.png" alt="LastPass" class="w-16 h-16 mx-auto mb-3 rounded-xl object-contain">
+                        <p class="text-white font-semibold text-sm mb-1">LastPass</p>
+                        <p class="text-gray-500 text-xs">CSV</p>
+                    </div>
+
+                    <!-- Bitwarden -->
+                    <div class="info-card p-6 text-center cursor-pointer hover:border-blue-500 transition-all" onclick="selectPasswordManager('bitwarden')">
+                        <img src="/static/images/bitwarden.png" alt="Bitwarden" class="w-16 h-16 mx-auto mb-3 rounded-xl object-contain">
+                        <p class="text-white font-semibold text-sm mb-1">Bitwarden</p>
+                        <p class="text-gray-500 text-xs">CSV / JSON</p>
+                    </div>
+
+                    <!-- Chrome -->
+                    <div class="info-card p-6 text-center cursor-pointer hover:border-blue-500 transition-all" onclick="selectPasswordManager('chrome')">
+                        <img src="/static/images/chrome.png" alt="Chrome" class="w-16 h-16 mx-auto mb-3 rounded-xl object-contain">
+                        <p class="text-white font-semibold text-sm mb-1">Chrome</p>
+                        <p class="text-gray-500 text-xs">CSV</p>
+                    </div>
+
+                    <!-- Firefox -->
+                    <div class="info-card p-6 text-center cursor-pointer hover:border-blue-500 transition-all" onclick="selectPasswordManager('firefox')">
+                        <img src="/static/images/firefox.png" alt="Firefox" class="w-16 h-16 mx-auto mb-3 rounded-xl object-contain">
+                        <p class="text-white font-semibold text-sm mb-1">Firefox</p>
+                        <p class="text-gray-500 text-xs">CSV</p>
+                    </div>
+
+                    <!-- Safari -->
+                    <div class="info-card p-6 text-center cursor-pointer hover:border-blue-500 transition-all" onclick="selectPasswordManager('safari')">
+                        <img src="/static/images/safari.png" alt="Safari" class="w-16 h-16 mx-auto mb-3 rounded-xl object-contain">
+                        <p class="text-white font-semibold text-sm mb-1">Safari</p>
+                        <p class="text-gray-500 text-xs">CSV</p>
+                    </div>
+
+                    <!-- AegisX PGP -->
+                    <div class="info-card p-6 text-center cursor-pointer hover:border-blue-500 transition-all" onclick="selectPasswordManager('aegisx-pgp')">
+                        <img src="/static/images/so1vault.png" alt="AegisX" class="w-16 h-16 mx-auto mb-3 rounded-xl object-contain">
+                        <p class="text-white font-semibold text-sm mb-1">AegisX</p>
+                        <p class="text-gray-500 text-xs">PGP</p>
+                    </div>
+
+                    <!-- Generic CSV -->
+                    <div class="info-card p-6 text-center cursor-pointer hover:border-blue-500 transition-all" onclick="selectPasswordManager('generic')">
+                        <img src="/static/images/csv.png" alt="CSV" class="w-16 h-16 mx-auto mb-3 rounded-xl object-contain">
+                        <p class="text-white font-semibold text-sm mb-1">Generic</p>
+                        <p class="text-gray-500 text-xs">CSV</p>
+                    </div>
+                </div>
+
+                <!-- Hidden file upload form -->
+                <form id="import-form" method="POST" action="{{ url_for('import_passwords') }}" enctype="multipart/form-data" class="hidden">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="manager_type" id="manager-type" value="">
+                    <input type="file" name="import_file" id="import-file" accept=".json,.csv,.pgp" onchange="checkPGPPassword()">
+                </form>
+
+                <!-- Added PGP password modal -->
+                <div id="pgp-password-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="info-card p-6 max-w-md w-full mx-4">
+                        <h3 class="text-lg font-semibold text-white mb-4">Enter Decryption Password</h3>
+                        <p class="text-gray-400 text-sm mb-4">This file is encrypted. Please enter the password you used to encrypt it.</p>
+                        <input type="password" id="pgp-decrypt-password" class="settings-input w-full px-3 py-2 mb-4" placeholder="Decryption password">
+                        <div class="flex gap-3">
+                            <button onclick="cancelPGPImport()" class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-all">Cancel</button>
+                            <button onclick="submitPGPImport()" class="flex-1 btn-primary px-4 py-2 text-white">Decrypt & Import</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Section -->
+            <div id="export-section" class="settings-section">
+                <h2 class="text-3xl font-bold text-white mb-2">Export Data</h2>
+                <p class="text-gray-400 text-sm mb-8">Choose a format to export your data</p>
+
+                {% if export_success %}
+                <div class="success-message mb-6">
+                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Export completed successfully!
+                </div>
+                {% endif %}
+
+                {% if export_error %}
+                <div class="error-message mb-6">
+                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    {{ export_error }}
+                </div>
+                {% endif %}
+
+                <!-- Added export options grid with JSON, CSV, and PGP -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <!-- JSON Export -->
+                    <form method="POST" action="{{ url_for('export_passwords', format='json') }}" class="info-card p-6 text-center cursor-pointer hover:border-blue-500 transition-all">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="w-full">
+                            <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <p class="text-white font-semibold text-sm mb-1">JSON</p>
+                            <p class="text-gray-500 text-xs">Structured Data Format</p>
+                        </button>
+                    </form>
+
+                    <!-- CSV Export -->
+                    <form method="POST" action="{{ url_for('export_passwords', format='csv') }}" class="info-card p-6 text-center cursor-pointer hover:border-blue-500 transition-all">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="w-full">
+                            <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <p class="text-white font-semibold text-sm mb-1">CSV</p>
+                            <p class="text-gray-500 text-xs">Spreadsheet Format</p>
+                        </button>
+                    </form>
+
+                    <!-- PGP Encrypted Export -->
+                    <div class="info-card p-6 text-center">
+                        <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        </div>
+                        <p class="text-white font-semibold text-sm mb-1">PGP Encrypted</p>
+                        <p class="text-gray-500 text-xs mb-3">Password Protected</p>
+
+                        <form method="POST" action="{{ url_for('export_passwords', format='pgp') }}" id="pgp-export-form">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                            <input type="password" name="encryption_password" id="encryption-password" placeholder="Encryption Password" class="settings-input w-full px-3 py-2 mb-2 text-xs" required>
+                            <button type="submit" class="btn-primary w-full px-4 py-2 text-white">Export PGP</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="info-card p-4">
+                    <p class="text-gray-400 text-xs">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <strong>Note:</strong> Exported files are unencrypted unless you choose PGP encryption. Handle with care.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Advanced Section -->
+            <div id="advanced-section" class="settings-section">
+                <h2 class="text-3xl font-bold text-white mb-2">Advanced Settings</h2>
+                <p class="text-gray-400 text-sm mb-8">Configure advanced options</p>
+
+                {% if advanced_saved %}
+                <div class="success-message mb-6">
+                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Advanced settings saved successfully!
+                </div>
+                {% endif %}
+
+                <!-- Added form for advanced settings with clipboard timeout and trash auto-delete -->
+                <form method="POST" action="{{ url_for('save_preferences') }}" onsubmit="return true;">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                    <!-- Clipboard Timeout Section -->
+                    <div class="info-card p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Clipboard Timeout
+                        </h3>
+                        <p class="text-gray-400 text-sm mb-4">Clear clipboard after copying password</p>
+
+                        <select name="clipboard_timeout" id="clipboard-timeout-advanced" class="settings-input w-full md:w-1/2">
+                            <option value="10" {% if session.get('clipboard_timeout', 30) == 10 %}selected{% endif %}>10 seconds</option>
+                            <option value="20" {% if session.get('clipboard_timeout', 30) == 20 %}selected{% endif %}>20 seconds</option>
+                            <option value="30" {% if session.get('clipboard_timeout', 30) == 30 %}selected{% endif %}>30 seconds</option>
+                            <option value="45" {% if session.get('clipboard_timeout', 30) == 45 %}selected{% endif %}>45 seconds</option>
+                            <option value="60" {% if session.get('clipboard_timeout', 30) == 60 %}selected{% endif %}>60 seconds</option>
+                            <option value="120" {% if session.get('clipboard_timeout', 30) == 120 %}selected{% endif %}>2 minutes</option>
+                            <option value="0" {% if session.get('clipboard_timeout', 30) == 0 %}selected{% endif %}>Never</option>
+                        </select>
+                    </div>
+
+                    <!-- Trash Auto-Delete Interval Section -->
+                    <div class="info-card p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            Trash Auto-Delete Interval
+                        </h3>
+                        <p class="text-gray-400 text-sm mb-4">Automatically delete items from trash after</p>
+
+                        <select name="trash_auto_delete_days" class="settings-input w-full md:w-1/2">
+                            <option value="0" {% if session.get('trash_auto_delete_days', 30) == 0 %}selected{% endif %}>Never</option>
+                            <option value="7" {% if session.get('trash_auto_delete_days', 30) == 7 %}selected{% endif %}>7 days</option>
+                            <option value="14" {% if session.get('trash_auto_delete_days', 30) == 14 %}selected{% endif %}>14 days</option>
+                            <option value="30" {% if session.get('trash_auto_delete_days', 30) == 30 %}selected{% endif %}>30 days</option>
+                            <option value="60" {% if session.get('trash_auto_delete_days', 30) == 60 %}selected{% endif %}>60 days</option>
+                            <option value="90" {% if session.get('trash_auto_delete_days', 30) == 90 %}selected{% endif %}>90 days</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full px-6 py-3 text-white">Save Advanced Settings</button>
+                </form>
+                <!-- </CHANGE> -->
+            </div>
+
+            <!-- Support Section -->
+            <div id="support-section" class="settings-section">
+                <h2 class="text-3xl font-bold text-white mb-2">Support</h2>
+                <p class="text-gray-400 text-sm mb-8">Get help with AegisX</p>
+
+                <div class="info-card p-6 text-center">
+                    <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636l-3.536 3.536M3.536 9.172l3.536-3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <p class="text-gray-400 text-sm">If you need assistance, please check our documentation or contact our support team.</p>
+                    <p class="text-gray-500 text-xs mt-2">Support resources are coming soon.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.settings-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all nav items
+            document.querySelectorAll('.settings-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Show the selected section
+            document.getElementById(sectionId + '-section').classList.add('active');
+
+            // Add active class to the clicked nav item
+            event.currentTarget.classList.add('active');
+
+            // Special handling for security section to load 2FA status
+            if (sectionId === 'security') {
+                load2FAStatus();
+            }
+
+            /* Added animated gradient background */
+            if (sectionId === 'advanced') {
+                showAdvancedWarning();
+            }
+            /* </CHANGE> */
+        }
+
+        function selectPasswordManager(managerType) {
+            document.getElementById('manager-type').value = managerType;
+            document.getElementById('import-file').click();
+        }
+
+        function checkPGPPassword() {
+            const managerType = document.getElementById('manager-type').value;
+            const file = document.getElementById('import-file').files[0];
+
+            if (managerType === 'aegisx-pgp' && file) {
+                // Show password modal for PGP files
+                document.getElementById('pgp-password-modal').classList.remove('hidden');
+            } else {
+                // Submit form directly for other formats
+                document.getElementById('import-form').submit();
+            }
+        }
+
+        function cancelPGPImport() {
+            document.getElementById('pgp-password-modal').classList.add('hidden');
+            document.getElementById('import-file').value = '';
+        }
+
+        function submitPGPImport() {
+            const password = document.getElementById('pgp-decrypt-password').value;
+            if (!password) {
+                alert('Please enter a decryption password');
+                return;
+            }
+
+            // Add password to form
+            const form = document.getElementById('import-form');
+            const passwordInput = document.createElement('input');
+            passwordInput.type = 'hidden';
+            passwordInput.name = 'decryption_password';
+            passwordInput.value = password;
+            form.appendChild(passwordInput);
+
+            // Submit form
+            form.submit();
+        }
+
+        function load2FAStatus() {
+            fetch('/settings/2fa/status', {
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('2fa-status-container');
+                if (data.enabled) {
+                    container.innerHTML = `
+                        <div class="text-center">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+                                <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-white mb-2">2FA is Enabled</h3>
+                            <p class="text-gray-400 text-sm mb-6">Your account is protected with two-factor authentication.</p>
+                            <button onclick="disable2FA()" class="btn-danger px-6 py-2 text-white">Disable 2FA</button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                                <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-white mb-2">2FA is Not Enabled</h3>
+                            <p class="text-gray-400 text-sm mb-6">Add an extra layer of security by enabling two-factor authentication.</p>
+                            <button onclick="enable2FA()" class="btn-primary px-6 py-2 text-white">Enable 2FA</button>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('[v0] Error loading 2FA status:', error);
+            });
+        }
+
+        function enable2FA() {
+            fetch('/settings/2fa/enable', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.getElementById('2fa-status-container');
+                    container.innerHTML = `
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-4 text-center">Scan QR Code</h3>
+                            <p class="text-gray-400 text-sm mb-4 text-center">Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)</p>
+                            <div class="flex justify-center mb-4">
+                                <img src="${data.qr_code}" alt="2FA QR Code" class="border-4 border-white rounded-lg">
+                            </div>
+                            <p class="text-gray-400 text-xs mb-4 text-center">Or enter this code manually: <code class="bg-gray-800 px-2 py-1 rounded text-blue-500">${data.secret}</code></p>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Enter verification code from your app:</label>
+                                <input type="text" id="2fa-verify-code" class="settings-input w-full px-4 py-3" placeholder="000000" maxlength="6">
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="load2FAStatus()" class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-all">Cancel</button>
+                                <button onclick="verify2FA()" class="flex-1 btn-primary px-4 py-2 text-white">Verify & Enable</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                     const container = document.getElementById('2fa-status-container');
+                     container.innerHTML = `
+                         <div class="text-center error-message">
+                             <p>${data.error || 'Failed to initiate 2FA setup. Please try again.'}</p>
+                         </div>
+                     `;
+                }
+            })
+            .catch(error => {
+                console.error('[v0] Error enabling 2FA:', error);
+                 const container = document.getElementById('2fa-status-container');
+                 container.innerHTML = `
+                     <div class="text-center error-message">
+                         <p>An unexpected error occurred. Please try again later.</p>
+                     </div>
+                 `;
+            });
+        }
+
+        function verify2FA() {
+            const code = document.getElementById('2fa-verify-code').value;
+            if (!code || code.length !== 6) {
+                alert('Please enter a valid 6-digit code');
+                return;
+            }
+
+            fetch('/settings/2fa/verify', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    load2FAStatus();
+                } else {
+                    alert('Invalid verification code. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('[v0] Error verifying 2FA:', error);
+            });
+        }
+
+        function disable2FA() {
+            if (!confirm('Are you sure you want to disable 2FA? This will make your account less secure.')) {
+                return;
+            }
+
+            fetch('/settings/2fa/disable', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    load2FAStatus();
+                }
+            })
+            .catch(error => {
+                console.error('[v0] Error disabling 2FA:', error);
+            });
+        }
+
+        function applyTheme() {
+            const theme = '{{ session.get("theme", "dark") }}';
+
+            if (theme === 'system') {
+                // Check system preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                    document.body.classList.add('light-theme');
+                } else {
+                    document.body.classList.remove('light-theme');
+                }
+            } else if (theme === 'light') {
+                document.body.classList.add('light-theme');
+            } else {
+                document.body.classList.remove('light-theme');
+            }
+        }
+
+        // Apply theme on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            applyTheme();
+
+            // Listen for system theme changes if using system theme
+            const theme = '{{ session.get("theme", "dark") }}';
+            if (theme === 'system' && window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', applyTheme);
+            }
+
+            /* Load saved clipboard timeout from localStorage on page load */
+            const savedTimeout = localStorage.getItem('clipboard_timeout');
+            if (savedTimeout) {
+                const dropdown = document.getElementById('clipboard-timeout-advanced');
+                if (dropdown) {
+                    dropdown.value = savedTimeout;
+                }
+            }
+            /* </CHANGE> */
+
+            /* Show success modal if redirected from form submission */
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'preferences') {
+                showSuccessModalNow('Settings Saved Successfully', 'Your preferences have been updated.');
+            } else if (urlParams.get('success') === 'advanced') {
+                showSuccessModalNow('Advanced Settings Saved', 'Your advanced preferences have been updated.');
+            }
+            /* </CHANGE> */
+        });
+
+
+        /* Updated success modal to show after page reload using URL parameter */
+        function showSuccessModalNow(title, message) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-icon success">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">${title}</h3>
+                    <p class="text-gray-400 text-sm mb-6">${message}</p>
+                    <button class="modal-button confirm w-full" onclick="this.closest('.modal-overlay').remove(); window.history.replaceState({}, '', window.location.pathname)">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+        /* </CHANGE> */
+
+        /* Removed old success modal function and replaced with redirect-based approach */
+        function showSuccessModal(event, title, message) {
+            // Form will submit normally and redirect with success parameter
+            return true;
+        }
+        /* </CHANGE> */
+
+        /* Updated clipboard timeout functions to sync with hidden form field */
+        function syncClipboardTimeout() {
+            const timeout = document.getElementById('clipboard-timeout-advanced').value;
+            document.getElementById('clipboard-timeout-hidden').value = timeout;
+            localStorage.setItem('clipboard_timeout', timeout);
+            console.log('[v0] Synced clipboard timeout:', timeout);
+        }
+
+        function saveClipboardTimeout() {
+            const timeout = document.getElementById('clipboard-timeout-advanced').value;
+            localStorage.setItem('clipboard_timeout', timeout);
+            console.log('[v0] Saved clipboard timeout to localStorage:', timeout, 'seconds');
+        }
+        /* </CHANGE> */
+
+        /* Added advanced warning modal */
+        function showAdvancedWarning() {
+            if (sessionStorage.getItem('advanced_warning_shown')) {
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content text-center">
+                    <div class="modal-icon warning">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Warning: Advanced Settings</h3>
+                    <p class="text-gray-400 text-sm mb-6">You are about to access advanced settings. Modifying these settings without proper knowledge may affect your vault's security and functionality. Only proceed if you're sure about what you're doing.</p>
+                    <div class="modal-buttons">
+                        <button class="modal-button cancel" onclick="this.closest('.modal-overlay').remove(); showSection('general')">Go Back</button>
+                        <button class="modal-button confirm" onclick="this.closest('.modal-overlay').remove(); sessionStorage.setItem('advanced_warning_shown', 'true')">I Understand</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+        /* </CHANGE> */
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
